@@ -1,0 +1,648 @@
+{% extends 'base.html' %}
+
+{% block title %}General - Mantenimiento{% endblock %}
+
+{% block page_title %}Mantenimiento · General{% endblock %}
+
+{% block content %}
+<style>
+    .maintenance-form-shell {
+        max-width: 900px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .maintenance-form-header,
+    .maintenance-form-card {
+        padding: 24px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.07);
+    }
+
+    .maintenance-form-header {
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+    }
+
+    .maintenance-form-header h2 {
+        margin: 0 0 6px;
+        font-size: 25px;
+    }
+
+    .maintenance-form-header p {
+        margin: 0;
+        opacity: .9;
+    }
+
+    .maintenance-form-card {
+        display: grid;
+        gap: 20px;
+    }
+
+    .form-field {
+        display: grid;
+        gap: 8px;
+    }
+
+    .maintenance-questions {
+        display: grid;
+        grid-template-columns: repeat(3, max-content);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .maintenance-question {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .form-field > label,
+    .form-field legend {
+        color: #263445;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .form-control {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid #d5deea;
+        border-radius: 8px;
+        background: #fff;
+        color: #1e293b;
+        font: inherit;
+    }
+
+    .form-control:focus {
+        outline: 3px solid rgba(79, 70, 229, .14);
+        border-color: #6366f1;
+    }
+
+    .choice-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        list-style: none;
+    }
+
+    .choice-list li label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 92px;
+        padding: 10px 14px;
+        border: 1px solid #d5deea;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .choice-list input {
+        accent-color: #4f46e5;
+    }
+
+    .lineas-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .linea-card {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid #d5deea;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+    .linea-row,
+    .maquina-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 42px;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .maquinas-list {
+        display: grid;
+        gap: 8px;
+        padding-left: 16px;
+        border-left: 2px solid #c7d2fe;
+    }
+
+    .linea-card-title {
+        margin: 0;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .hierarchy-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .linea-remove {
+        width: 42px;
+        height: 42px;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        background: #fff;
+        color: #b91c1c;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+    .linea-remove:disabled,
+    .hierarchy-actions button:disabled {
+        cursor: not-allowed;
+        opacity: .5;
+    }
+
+    .tag-preview {
+        display: inline-flex;
+        min-width: 54px;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: .08em;
+    }
+
+    .tag-help,
+    .field-help {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .field-errors {
+        margin: 0;
+        padding-left: 18px;
+        color: #b91c1c;
+        font-size: 13px;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .maintenance-action {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 8px;
+        background: #4f46e5;
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .maintenance-action.secondary {
+        border: 1px solid #d5deea;
+        background: #fff;
+        color: #334155;
+    }
+
+    .maintenance-sheet {
+        gap: 24px;
+    }
+
+    .sheet-heading {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .sheet-heading h3,
+    .sheet-section h3 {
+        margin: 0;
+        color: #263445;
+    }
+
+    .sheet-section {
+        display: grid;
+        gap: 14px;
+    }
+
+    .sheet-section h3 {
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 15px;
+    }
+
+    .sheet-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .sheet-field {
+        display: grid;
+        gap: 6px;
+    }
+
+    .sheet-field-label {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .sheet-field-value {
+        color: #1e293b;
+        font-size: 15px;
+        overflow-wrap: anywhere;
+    }
+
+    .sheet-lines {
+        display: grid;
+        gap: 12px;
+    }
+
+    .sheet-line {
+        padding: 14px 16px;
+        border: 1px solid #d5deea;
+        border-radius: 9px;
+        background: #f8fafc;
+    }
+
+    .sheet-line h4 {
+        margin: 0 0 9px;
+        color: #334155;
+    }
+
+    .sheet-line ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #475569;
+    }
+
+    @media (max-width: 760px) {
+        .maintenance-questions {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        .maintenance-form-header,
+        .maintenance-form-card {
+            padding: 18px;
+        }
+
+        .maintenance-questions {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .linea-row,
+        .maquina-row {
+            grid-template-columns: minmax(0, 1fr) 40px;
+        }
+    }
+</style>
+
+<div class="maintenance-form-shell">
+    <header class="maintenance-form-header">
+        <h2>{% if editando and configuracion.pk %}Editar información general{% else %}Información general{% endif %}</h2>
+        <p>{% if editando %}Completa los datos del aserradero para preparar su identificación y organización de producción.{% else %}Ficha de información y organización de producción guardada.{% endif %}</p>
+    </header>
+
+    {% if not editando %}
+    <article class="maintenance-form-card maintenance-sheet">
+        <div class="sheet-heading">
+            <h3>Ficha general del aserradero</h3>
+            <span class="tag-preview">{{ configuracion.tag_identificacion|default:'---' }}</span>
+        </div>
+
+        <section class="sheet-section">
+            <h3>Identificación</h3>
+            <div class="sheet-grid">
+                <div class="sheet-field">
+                    <span class="sheet-field-label">Ciudad o parroquia</span>
+                    <span class="sheet-field-value">{{ configuracion.ciudad_parroquia }}</span>
+                </div>
+                <div class="sheet-field">
+                    <span class="sheet-field-label">Nombre del aserradero</span>
+                    <span class="sheet-field-value">{{ configuracion.nombre_aserradero }}</span>
+                </div>
+                <div class="sheet-field">
+                    <span class="sheet-field-label">Tag de identificación</span>
+                    <span class="sheet-field-value">{{ configuracion.tag_identificacion }}</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="sheet-section">
+            <h3>Características de producción</h3>
+            <div class="sheet-grid">
+                <div class="sheet-field">
+                    <span class="sheet-field-label">¿Tiene patio de rolas?</span>
+                    <span class="sheet-field-value">{% if configuracion.tiene_patios_rolas %}Sí{% else %}No{% endif %}</span>
+                </div>
+                <div class="sheet-field">
+                    <span class="sheet-field-label">¿Clasifica rolas?</span>
+                    <span class="sheet-field-value">{% if configuracion.clasifica_rolas %}Sí{% else %}No{% endif %}</span>
+                </div>
+                <div class="sheet-field">
+                    <span class="sheet-field-label">Tipo de producción</span>
+                    <span class="sheet-field-value">{{ configuracion.get_tipo_produccion_display }}</span>
+                </div>
+                <div class="sheet-field">
+                    <span class="sheet-field-label">Cantidad de líneas</span>
+                    <span class="sheet-field-value">{{ configuracion.cantidad_lineas|default:'No aplica' }}</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="sheet-section">
+            <h3>Organización de la producción</h3>
+            <div class="sheet-lines">
+                {% for linea in lineas_configuracion %}
+                    <div class="sheet-line">
+                        <h4>{{ linea.descripcion }}</h4>
+                        <ul>
+                            {% for maquina in linea.maquinas %}<li>{{ maquina }}</li>{% endfor %}
+                        </ul>
+                    </div>
+                {% empty %}
+                    <p class="sheet-field-value">No hay líneas de producción registradas.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <div class="form-actions">
+            <a class="maintenance-action secondary" href="{% url 'mantenimiento' %}">Volver a Mantenimiento</a>
+            <a class="maintenance-action" href="{% url 'mantenimiento_general' %}?editar=1">Editar</a>
+        </div>
+    </article>
+    {% else %}
+    <form method="post" class="maintenance-form-card" id="maintenance-general-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <ul class="field-errors">{{ form.non_field_errors }}</ul>
+        {% endif %}
+
+        <div class="form-field">
+            <label for="{{ form.ciudad_parroquia.id_for_label }}">Nombre de ciudad o parroquia</label>
+            {{ form.ciudad_parroquia }}
+            {% if form.ciudad_parroquia.errors %}<ul class="field-errors">{{ form.ciudad_parroquia.errors }}</ul>{% endif %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.nombre_aserradero.id_for_label }}">Nombre del aserradero</label>
+            {{ form.nombre_aserradero }}
+            {% if form.nombre_aserradero.errors %}<ul class="field-errors">{{ form.nombre_aserradero.errors }}</ul>{% endif %}
+        </div>
+
+        <div class="form-field">
+            <label>Tag de identificación (vista previa)</label>
+            <span class="tag-preview" id="tag-preview">{{ tag_identificacion|default:'---' }}</span>
+            <span class="tag-help">Usa las tres primeras letras de la ciudad o parroquia y del nombre del aserradero.</span>
+        </div>
+
+        <div class="maintenance-questions">
+            <fieldset class="form-field maintenance-question">
+                <legend>¿Tiene patio de rolas?</legend>
+                {{ form.tiene_patios_rolas }}
+                {% if form.tiene_patios_rolas.errors %}<ul class="field-errors">{{ form.tiene_patios_rolas.errors }}</ul>{% endif %}
+            </fieldset>
+
+            <fieldset class="form-field maintenance-question">
+                <legend>¿Clasifica rolas?</legend>
+                {{ form.clasifica_rolas }}
+                {% if form.clasifica_rolas.errors %}<ul class="field-errors">{{ form.clasifica_rolas.errors }}</ul>{% endif %}
+            </fieldset>
+
+            <fieldset class="form-field maintenance-question">
+                <legend>¿La producción es seccionada o completa?</legend>
+                {{ form.tipo_produccion }}
+                {% if form.tipo_produccion.errors %}<ul class="field-errors">{{ form.tipo_produccion.errors }}</ul>{% endif %}
+            </fieldset>
+        </div>
+
+        <div class="form-field" id="cantidad-lineas-field">
+            <label for="{{ form.cantidad_lineas.id_for_label }}">¿Cuántas líneas de producción tiene?</label>
+            {{ form.cantidad_lineas }}
+            {% if form.cantidad_lineas.errors %}<ul class="field-errors">{{ form.cantidad_lineas.errors }}</ul>{% endif %}
+        </div>
+
+        <div class="form-field">
+            <label>¿Cómo está organizada la producción?</label>
+            <span class="field-help">Describe cada línea y agrega las máquinas que la componen antes de crear otra línea.</span>
+            <div class="lineas-list" id="lineas-list" data-initial-lines="{{ lineas_iniciales }}"></div>
+            {{ form.lineas }}
+            {% if form.lineas.errors %}<ul class="field-errors">{{ form.lineas.errors }}</ul>{% endif %}
+            <div class="hierarchy-actions">
+                <button type="button" class="maintenance-action secondary" id="add-linea">+ Agregar línea de producción</button>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a class="maintenance-action secondary" href="{% url 'mantenimiento' %}">Volver a Mantenimiento</a>
+            <button class="maintenance-action" type="submit">Guardar información</button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+{% if editando %}
+<script>
+    (() => {
+        const form = document.getElementById('maintenance-general-form');
+        const cityInput = document.getElementById('{{ form.ciudad_parroquia.id_for_label }}');
+        const nameInput = document.getElementById('{{ form.nombre_aserradero.id_for_label }}');
+        const tagPreview = document.getElementById('tag-preview');
+        const productionField = document.getElementById('cantidad-lineas-field');
+        const lineList = document.getElementById('lineas-list');
+        const lineData = document.getElementById('id_lineas');
+        let lineNumber = 0;
+
+        function updateTag() {
+            const firstLetters = value => (value.match(/\p{L}/gu) || []).slice(0, 3).join('').toUpperCase();
+            const nameParts = nameInput.value.trim().split(/\s+/).slice(0, 2).map(firstLetters);
+            const parts = [firstLetters(cityInput.value), ...nameParts].filter(Boolean);
+            tagPreview.textContent = parts.length ? parts.join('-') : '---';
+        }
+
+        function updateProductionFields() {
+            const selected = form.querySelector('input[name="tipo_produccion"]:checked');
+            productionField.hidden = !selected || selected.value !== 'seccionada';
+        }
+
+        function addMachine(machineList, value = '') {
+            const row = document.createElement('div');
+            row.className = 'maquina-row';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.maxLength = 200;
+            input.className = 'form-control';
+            input.placeholder = `Máquina ${machineList.children.length + 1}`;
+            input.value = value;
+            input.setAttribute('aria-label', `Nombre de máquina ${machineList.children.length + 1}`);
+            input.addEventListener('input', updateHierarchyControls);
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'linea-remove';
+            remove.textContent = '×';
+            remove.setAttribute('aria-label', 'Quitar máquina');
+            remove.addEventListener('click', () => {
+                row.remove();
+                updateHierarchyControls();
+            });
+
+            row.append(input, remove);
+            machineList.append(row);
+        }
+
+        function addLine(value = '', machines = []) {
+            lineNumber += 1;
+            const card = document.createElement('section');
+            card.className = 'linea-card';
+            card.dataset.lineNumber = lineNumber;
+
+            const title = document.createElement('h3');
+            title.className = 'linea-card-title';
+            title.textContent = `Línea de producción ${lineNumber}`;
+
+            const row = document.createElement('div');
+            row.className = 'linea-row';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.maxLength = 200;
+            input.className = 'form-control';
+            input.placeholder = `Descripción de la línea ${lineNumber}`;
+            input.value = value;
+            input.setAttribute('aria-label', `Organización de la línea ${lineNumber}`);
+            input.addEventListener('input', updateHierarchyControls);
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'linea-remove';
+            remove.textContent = '×';
+            remove.setAttribute('aria-label', `Quitar línea ${lineNumber}`);
+            remove.addEventListener('click', () => {
+                card.remove();
+                updateHierarchyControls();
+            });
+
+            row.append(input, remove);
+            const machineHeading = document.createElement('h4');
+            machineHeading.className = 'linea-card-title';
+            machineHeading.textContent = 'Máquinas de esta línea';
+
+            const machineList = document.createElement('div');
+            machineList.className = 'maquinas-list';
+            machines.forEach(machine => addMachine(machineList, machine));
+            if (!machineList.children.length) addMachine(machineList);
+
+            const actions = document.createElement('div');
+            actions.className = 'hierarchy-actions';
+            const addMachineButton = document.createElement('button');
+            addMachineButton.type = 'button';
+            addMachineButton.className = 'maintenance-action secondary';
+            addMachineButton.textContent = '+ Agregar máquina';
+            addMachineButton.addEventListener('click', () => {
+                addMachine(machineList);
+                updateHierarchyControls();
+            });
+            actions.append(addMachineButton);
+
+            card.append(title, row, machineHeading, machineList, actions);
+            lineList.append(card);
+            updateHierarchyControls();
+        }
+
+        function updateHierarchyControls() {
+            const cards = Array.from(lineList.querySelectorAll('.linea-card'));
+            const lineNames = cards.map(card => (
+                card.querySelector('.linea-row input').value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+            ));
+            cards.forEach((card, index) => {
+                const lineInput = card.querySelector('.linea-row input');
+                const machineInputs = Array.from(card.querySelectorAll('.maquina-row input'));
+                const repeatedName = lineNames[index] && lineNames.indexOf(lineNames[index]) !== index;
+                lineInput.setCustomValidity(
+                    repeatedName ? 'Los nombres de las líneas de producción no pueden repetirse.' : ''
+                );
+                const allMachinesFilled = machineInputs.length > 0
+                    && machineInputs.every(input => input.value.trim());
+                const addMachineButton = card.querySelector('.hierarchy-actions button');
+                const removeLineButton = card.querySelector('.linea-row button');
+
+                addMachineButton.disabled = !machineInputs[machineInputs.length - 1].value.trim();
+                removeLineButton.disabled = cards.length === 1;
+                card.dataset.complete = lineInput.value.trim() && allMachinesFilled ? 'true' : 'false';
+            });
+            document.getElementById('add-linea').disabled = (
+                !cards.length || cards.some(card => card.dataset.complete !== 'true')
+            );
+        }
+
+        try {
+            const initialLines = JSON.parse(lineList.dataset.initialLines || '[]');
+            if (Array.isArray(initialLines)) {
+                initialLines.forEach(line => {
+                    if (typeof line === 'string') {
+                        addLine(line);
+                    } else if (line && typeof line === 'object') {
+                        addLine(
+                            typeof line.descripcion === 'string' ? line.descripcion : '',
+                            Array.isArray(line.maquinas) ? line.maquinas.filter(machine => typeof machine === 'string') : [],
+                        );
+                    }
+                });
+            }
+        } catch (error) {
+            addLine();
+        }
+        if (!lineList.children.length) addLine();
+
+        cityInput.addEventListener('input', updateTag);
+        nameInput.addEventListener('input', updateTag);
+        form.querySelectorAll('input[name="tipo_produccion"]').forEach(input => {
+            input.addEventListener('change', updateProductionFields);
+        });
+        document.getElementById('add-linea').addEventListener('click', () => {
+            addLine();
+            lineList.lastElementChild.querySelector('.linea-row input').focus();
+        });
+        form.addEventListener('submit', () => {
+            const lineDataValues = Array.from(lineList.querySelectorAll('.linea-card')).map(card => ({
+                descripcion: card.querySelector('.linea-row input').value.trim(),
+                maquinas: Array.from(card.querySelectorAll('.maquina-row input'))
+                    .map(input => input.value.trim())
+                    .filter(Boolean),
+            }));
+            lineData.value = JSON.stringify(lineDataValues);
+        });
+
+        updateTag();
+        updateProductionFields();
+    })();
+</script>
+{% endif %}
+{% endblock %}

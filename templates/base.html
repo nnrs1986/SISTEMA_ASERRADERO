@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SISTEMA ASERRADERO{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dashboard-background, #f5f5f5);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-header h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-symbol {
+            display: inline-flex;
+            width: 25px;
+            height: 25px;
+            flex: 0 0 25px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-symbol svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* User info */
+        .user-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .user-info strong {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 5px;
+        }
+
+        .user-info .sidebar-symbol {
+            width: 18px;
+            height: 18px;
+            flex-basis: 18px;
+        }
+
+        .user-role {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* Sidebar Menu */
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding-left: 20px;
+        }
+
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border-left: 4px solid white;
+            padding-left: 15px;
+        }
+
+        .sidebar-menu a .icon {
+            display: inline-flex;
+            width: 24px;
+            flex: 0 0 24px;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-menu a .icon svg {
+            display: block;
+            width: 21px;
+            height: 21px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        /* Top bar logout button */
+        .topbar-logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+        }
+
+        .topbar-logout:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6f42c1 100%);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .topbar {
+            background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            color: white;
+            font-size: 24px;
+        }
+
+        .page-heading {
+            min-width: 0;
+        }
+
+        .company-summary {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-top: 4px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 13px;
+        }
+
+        .company-rif {
+            padding-left: 18px;
+            border-left: 1px solid rgba(255, 255, 255, 0.35);
+            white-space: nowrap;
+        }
+
+        .topbar-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .topbar-logo {
+            display: block;
+            max-width: 100px;
+            max-height: 100px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .time-display {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding-bottom: 60px;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-footer {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
+                margin-top: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        /* Scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Module container */
+        .module-container {
+            background: var(--dashboard-background);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .module-container h3 {
+            color: var(--module-start);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body style="--dashboard-background: {{ tema_colores.fondo }}; --sidebar-start: {{ tema_colores.sidebar_inicio }}; --sidebar-end: {{ tema_colores.sidebar_fin }}; --module-start: {{ tema_colores.modulo_inicio }}; --module-end: {{ tema_colores.modulo_fin }};">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>
+                <span class="sidebar-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 21V9l6 3V8l6 3V5h6v16z"/>
+                        <path d="M7 16h2m3 0h2m3 0h2M17 8h1"/>
+                    </svg>
+                </span>
+                <span>{{ empresa.nombre }}</span>
+            </h1>
+            <p>{{ empresa.slogan }}</p>
+        </div>
+
+        <div class="user-info">
+            <strong>
+                <span class="sidebar-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="8" r="3.5"/>
+                        <path d="M5 20a7 7 0 0 1 14 0"/>
+                    </svg>
+                </span>
+                <span>{{ user.get_full_name|default:user.username }}</span>
+            </strong>
+            <span class="user-role">{{ cargo_usuario }}</span>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3.5" y="3.5" width="7" height="7" rx="1"/>
+                            <rect x="13.5" y="3.5" width="7" height="4" rx="1"/>
+                            <rect x="13.5" y="10.5" width="7" height="10" rx="1"/>
+                            <rect x="3.5" y="13.5" width="7" height="7" rx="1"/>
+                        </svg>
+                    </span>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/rolas/" class="{% if 'rolas' in request.path %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 7.5c0-1.4 3.6-2.5 8-2.5s8 1.1 8 2.5v9c0 1.4-3.6 2.5-8 2.5s-8-1.1-8-2.5z"/>
+                            <path d="M4 7.5c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/>
+                            <path d="M12 12.2c1.4 0 2.6.8 2.6 1.8s-1.2 1.8-2.6 1.8-2.6-.8-2.6-1.8 1.2-1.8 2.6-1.8z"/>
+                        </svg>
+                    </span>
+                    <span>Rolas</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'aserrio' %}" class="{% if request.resolver_match.url_name == 'aserrio' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 6h13l5 6-5 6H3l3-6z"/>
+                            <path d="M8 9.5h7M7.5 13l1.5 1.5m1-1.5 1.5 1.5m1-1.5 1.5 1.5"/>
+                            <path d="M3 6v12"/>
+                        </svg>
+                    </span>
+                    <span>Aserrio</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'secado' %}" class="{% if request.resolver_match.url_name == 'secado' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M10 14.8V5.5a2.5 2.5 0 0 1 5 0v9.3a5 5 0 1 1-5 0z"/>
+                            <path d="M12.5 9v8"/>
+                            <circle cx="12.5" cy="18" r="1.5"/>
+                        </svg>
+                    </span>
+                    <span>Secado</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'reproceso' %}" class="{% if request.resolver_match.url_name == 'reproceso' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="m9 4 2-2 2 2-1.2 2.1"/>
+                            <path d="M11.8 6.1 9.5 10H5l-2-3.5L5 3h4"/>
+                            <path d="m19.5 10 2.8.8-.8 2.8-2.4-.2"/>
+                            <path d="m19.1 13.4-2.2 3.8H13l-2-3.5 2-3.5h4"/>
+                            <path d="m6 20-2.5 1.4L2 19l1.3-2"/>
+                            <path d="m3.3 17 2.2-3.8H10l2 3.5-2 3.5H6"/>
+                        </svg>
+                    </span>
+                    <span>Reproceso</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="m3 7 9-4 9 4-9 4z"/>
+                            <path d="M3 7v10l9 4 9-4V7M12 11v10"/>
+                            <path d="m7.5 5 9 4"/>
+                        </svg>
+                    </span>
+                    <span>Inventario</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'ventas' %}" class="{% if request.resolver_match.url_name == 'ventas' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 3v18M16.5 7.5c0-1.7-1.8-3-4.5-3s-4.5 1.3-4.5 3 1.5 2.6 4.5 3 4.5 1.3 4.5 3-1.8 3-4.5 3-4.5-1.3-4.5-3"/>
+                        </svg>
+                    </span>
+                    <span>Ventas</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'despacho' %}" class="{% if request.resolver_match.url_name == 'despacho' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2.5 5h12v12h-12zM14.5 9h4l3 3v5h-7z"/>
+                            <circle cx="7" cy="18" r="2"/>
+                            <circle cx="18" cy="18" r="2"/>
+                            <path d="M14.5 14h7"/>
+                        </svg>
+                    </span>
+                    <span>Despacho</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'mantenimiento' %}" class="{% if request.resolver_match.url_name == 'mantenimiento' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="m14.5 6.5 3 3-8 8-4 1 1-4 8-8z"/>
+                            <path d="m13 5 2-2 4 4-2 2"/>
+                            <path d="M6 19l-1 1"/>
+                        </svg>
+                    </span>
+                    <span>Mantenimiento</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'administrativo' %}" class="{% if request.resolver_match.url_name == 'administrativo' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="5" y="4" width="14" height="17" rx="2"/>
+                            <path d="M9 4.5V3h6v1.5M9 10h6M9 14h6M9 18h4"/>
+                        </svg>
+                    </span>
+                    <span>Administrativo</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'guias' %}" class="{% if request.resolver_match.url_name == 'guias' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 3.5h8l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20z"/>
+                            <path d="M14 3.5V8h4M9 12h6M9 16h6"/>
+                        </svg>
+                    </span>
+                    <span>Guías</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'permisologia' %}" class="{% if request.resolver_match.url_name == 'permisologia' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="10" width="16" height="11" rx="2"/>
+                            <path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3"/>
+                            <circle cx="12" cy="14.5" r=".7"/>
+                        </svg>
+                    </span>
+                    <span>Permisología</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'personal' %}" class="{% if request.resolver_match.url_name == 'personal' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="9" cy="8" r="3"/>
+                            <path d="M4 19c1.2-2.6 3.5-4 6-4s4.8 1.4 6 4"/>
+                            <path d="M17 7a2.5 2.5 0 0 1 0 5"/>
+                            <path d="M18.5 16c.8-1.2 1.5-2.6 1.5-4"/>
+                        </svg>
+                    </span>
+                    <span>Personal</span>
+                </a>
+            </li>
+            {% if user.is_staff or user.is_superuser %}
+            <li>
+                <a href="{% url 'configuracion' %}" class="{% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7z"/>
+                        </svg>
+                    </span>
+                    <span>Configuración</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="page-heading">
+                <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                {% block page_subtitle %}{% endblock %}
+            </div>
+            <div class="topbar-info">
+                <div class="topbar-actions">
+                    <a href="{% url 'logout' %}" class="topbar-logout">
+                        <span>🚪</span>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                    {% if logo_empresa_disponible %}
+                    <img class="topbar-logo" src="{% static empresa.logo_path %}" alt="Logo de {{ empresa.nombre }}">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

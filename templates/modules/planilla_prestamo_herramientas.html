@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planilla de préstamo de herramientas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            color: #1e293b;
+            background: #e9eef4;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .screen-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            background: #1e293b;
+        }
+
+        .toolbar-button {
+            min-height: 38px;
+            padding: 0 15px;
+            border: 0;
+            border-radius: 7px;
+            color: #fff;
+            background: #2563eb;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            line-height: 38px;
+        }
+
+        .toolbar-button.secondary {
+            border: 1px solid #64748b;
+            background: transparent;
+        }
+
+        .print-sheet {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            width: 215.9mm;
+            height: 263mm;
+            margin: 18px auto;
+            background: #fff;
+            box-shadow: 0 5px 25px rgba(15, 23, 42, .16);
+        }
+
+        .loan-copy {
+            min-height: 0;
+            overflow: hidden;
+            padding: 3mm 5mm;
+        }
+
+        .loan-copy:first-child {
+            border-bottom: 1px dashed #64748b;
+        }
+
+        .copy-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-bottom: 1.4mm;
+            border-bottom: 1.5px solid #1e293b;
+        }
+
+        .copy-header h1 {
+            margin: 0;
+            font-size: 11px;
+            letter-spacing: .045em;
+            text-transform: uppercase;
+        }
+
+        .copy-number {
+            flex: 0 0 auto;
+            color: #475569;
+            font-size: 7px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .form-section {
+            margin-top: 1.4mm;
+        }
+
+        .form-section h2 {
+            margin: 0 0 1mm;
+            padding: 1mm 1.5mm;
+            border-left: 2px solid #2563eb;
+            background: #f1f5f9;
+            color: #1e293b;
+            font-size: 7px;
+            letter-spacing: .055em;
+            text-transform: uppercase;
+        }
+
+        .fields {
+            display: grid;
+            gap: 1mm 2mm;
+        }
+
+        .fields.general {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .fields.worker {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .fields.tool {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .fields.accessory {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .field {
+            display: flex;
+            min-width: 0;
+            min-height: 8.5mm;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0 .4mm .5mm;
+            border-bottom: 1px solid #94a3b8;
+        }
+
+        .field-label {
+            color: #334155;
+            font-size: 6.7px;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        .field-hint {
+            color: #64748b;
+            font-weight: 400;
+        }
+
+        .condition-options {
+            padding-bottom: .2mm;
+            color: #334155;
+            font-size: 7px;
+            line-height: 1.2;
+        }
+
+        .signatures {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 5mm;
+            padding: 1mm 1mm 0;
+        }
+
+        .signature {
+            display: flex;
+            min-height: 10mm;
+            flex-direction: column;
+            justify-content: flex-end;
+            text-align: center;
+        }
+
+        .signature-line {
+            height: 6mm;
+            border-bottom: 1px solid #64748b;
+        }
+
+        .signature-label {
+            margin-top: 1mm;
+            color: #334155;
+            font-size: 6.5px;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        @page {
+            size: letter portrait;
+            margin: 8mm;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .screen-toolbar {
+                display: none !important;
+            }
+
+            .print-sheet {
+                width: auto;
+                height: 263mm;
+                margin: 0;
+                box-shadow: none;
+                break-inside: avoid;
+            }
+        }
+
+        @media screen and (max-width: 800px) {
+            .print-sheet {
+                transform: scale(.8);
+                transform-origin: top center;
+                margin-bottom: -55mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="screen-toolbar" aria-label="Acciones de impresión">
+        <button class="toolbar-button" type="button" onclick="window.print()">Imprimir planilla / Guardar como PDF</button>
+        <a class="toolbar-button secondary" href="{% url 'mantenimiento_prestamos_herramientas' %}">Volver a préstamos</a>
+    </nav>
+
+    <main class="print-sheet">
+        <section class="loan-copy" aria-label="Primera copia de la planilla">
+            <header class="copy-header">
+                <h1>Solicitud y entrega de herramienta</h1>
+                <span class="copy-number">Copia 1 de 2</span>
+            </header>
+            <section class="form-section">
+                <h2>1. Datos generales</h2>
+                <div class="fields general">
+                    <div class="field"><span class="field-label">Empresa</span></div>
+                    <div class="field"><span class="field-label">Planta</span></div>
+                    <div class="field"><span class="field-label">Departamento</span></div>
+                    <div class="field"><span class="field-label">Fecha y hora</span></div>
+                    <div class="field"><span class="field-label">Tipo de préstamo</span></div>
+                    <div class="field"><span class="field-label">Fecha prevista de devolución</span></div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>2. Datos del trabajador</h2>
+                <div class="fields worker">
+                    <div class="field"><span class="field-label">Código del trabajador <span class="field-hint">(si tiene)</span></span></div>
+                    <div class="field"><span class="field-label">Nombre</span></div>
+                    <div class="field"><span class="field-label">Cargo</span></div>
+                    <div class="field"><span class="field-label">Departamento</span></div>
+                    <div class="field"><span class="field-label">Supervisor</span></div>
+                    <div class="field"><span class="field-label">Área donde utilizará la herramienta</span></div>
+                    <div class="field"><span class="field-label">Orden de trabajo <span class="field-hint">(si la tiene)</span></span></div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>3. Herramienta entregada</h2>
+                <div class="fields tool">
+                    <div class="field"><span class="field-label">Código de herramienta</span></div>
+                    <div class="field"><span class="field-label">Nombre de herramienta</span></div>
+                    <div class="field"><span class="field-label">Serial <span class="field-hint">(si tiene)</span></span></div>
+                    <div class="field"><span class="field-label">Cantidad</span></div>
+                    <div class="field">
+                        <span class="field-label">Condición</span>
+                        <span class="condition-options">( ) Bueno &nbsp;&nbsp; ( ) Regular</span>
+                    </div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>4. En caso de accesorio entregado</h2>
+                <div class="fields accessory">
+                    <div class="field"><span class="field-label">Nombre del accesorio (pieza o elemento)</span></div>
+                    <div class="field"><span class="field-label">Para qué herramienta es (nombre)</span></div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>Autorización y entrega</h2>
+                <div class="signatures">
+                    <div class="signature"><span class="signature-line"></span><span class="signature-label">Autorizado por (firma)</span></div>
+                    <div class="signature"><span class="signature-line"></span><span class="signature-label">Entregado por (firma)</span></div>
+                    <div class="signature"><span class="signature-line"></span><span class="signature-label">Quien recibe (firma)</span></div>
+                </div>
+            </section>
+        </section>
+
+        <section class="loan-copy" aria-label="Segunda copia de la planilla">
+            <header class="copy-header">
+                <h1>Solicitud y entrega de herramienta</h1>
+                <span class="copy-number">Copia 2 de 2</span>
+            </header>
+            <section class="form-section">
+                <h2>1. Datos generales</h2>
+                <div class="fields general">
+                    <div class="field"><span class="field-label">Empresa</span></div>
+                    <div class="field"><span class="field-label">Planta</span></div>
+                    <div class="field"><span class="field-label">Departamento</span></div>
+                    <div class="field"><span class="field-label">Fecha y hora</span></div>
+                    <div class="field"><span class="field-label">Tipo de préstamo</span></div>
+                    <div class="field"><span class="field-label">Fecha prevista de devolución</span></div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>2. Datos del trabajador</h2>
+                <div class="fields worker">
+                    <div class="field"><span class="field-label">Código del trabajador <span class="field-hint">(si tiene)</span></span></div>
+                    <div class="field"><span class="field-label">Nombre</span></div>
+                    <div class="field"><span class="field-label">Cargo</span></div>
+                    <div class="field"><span class="field-label">Departamento</span></div>
+                    <div class="field"><span class="field-label">Supervisor</span></div>
+                    <div class="field"><span class="field-label">Área donde utilizará la herramienta</span></div>
+                    <div class="field"><span class="field-label">Orden de trabajo <span class="field-hint">(si la tiene)</span></span></div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>3. Herramienta entregada</h2>
+                <div class="fields tool">
+                    <div class="field"><span class="field-label">Código de herramienta</span></div>
+                    <div class="field"><span class="field-label">Nombre de herramienta</span></div>
+                    <div class="field"><span class="field-label">Serial <span class="field-hint">(si tiene)</span></span></div>
+                    <div class="field"><span class="field-label">Cantidad</span></div>
+                    <div class="field">
+                        <span class="field-label">Condición</span>
+                        <span class="condition-options">( ) Bueno &nbsp;&nbsp; ( ) Regular</span>
+                    </div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>4. En caso de accesorio entregado</h2>
+                <div class="fields accessory">
+                    <div class="field"><span class="field-label">Nombre del accesorio (pieza o elemento)</span></div>
+                    <div class="field"><span class="field-label">Para qué herramienta es (nombre)</span></div>
+                </div>
+            </section>
+            <section class="form-section">
+                <h2>Autorización y entrega</h2>
+                <div class="signatures">
+                    <div class="signature"><span class="signature-line"></span><span class="signature-label">Autorizado por (firma)</span></div>
+                    <div class="signature"><span class="signature-line"></span><span class="signature-label">Entregado por (firma)</span></div>
+                    <div class="signature"><span class="signature-line"></span><span class="signature-label">Quien recibe (firma)</span></div>
+                </div>
+            </section>
+        </section>
+    </main>
+    <script>
+        window.addEventListener('load', function () {
+            window.print();
+        });
+    </script>
+</body>
+</html>

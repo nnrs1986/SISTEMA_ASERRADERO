@@ -1,0 +1,642 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar reproceso - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}Agregar reproceso{% endblock %}
+
+{% block content %}
+<style>
+    .reprocess-form-page {
+        max-width: 1150px;
+        margin: 0 auto;
+    }
+
+    .reprocess-panel {
+        margin-bottom: 24px;
+        padding: 24px;
+        border: 1px solid #edf0f2;
+        border-radius: 14px;
+        background: var(--dashboard-background);
+        box-shadow: 0 4px 14px rgba(31, 45, 61, 0.05);
+    }
+
+    .reprocess-panel h1,
+    .reprocess-panel h2 {
+        margin: -24px -24px 18px;
+        padding: 18px 24px;
+        border-radius: 13px 13px 0 0;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        color: white;
+    }
+
+    .reprocess-intro {
+        margin: 0 0 22px;
+        color: #727d87;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .reprocess-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .reprocess-field label,
+    .package-search label {
+        display: block;
+        margin-bottom: 7px;
+        color: #35404a;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .reprocess-field .form-control,
+    .package-search .form-control,
+    .product-table input,
+    .product-table select {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #d9dfe3;
+        border-radius: 7px;
+        background: white;
+        color: #202a33;
+        font: inherit;
+    }
+
+    .machine-options {
+        margin: 0 0 24px;
+        padding: 18px;
+        border: 1px solid #e5ebe7;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #fbfdfb 0%, #f6f9f7 100%);
+    }
+
+    .machine-options legend {
+        padding: 0 8px;
+        color: #26372d;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .machine-options ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .machine-options li label {
+        display: flex;
+        min-height: 66px;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1px solid #e1e8e3;
+        border-radius: 10px;
+        background: white;
+        color: #26372d;
+        font-size: 13px;
+        font-weight: 650;
+        cursor: pointer;
+        transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .machine-options li label:hover {
+        transform: translateY(-1px);
+        border-color: #a9cbb4;
+        box-shadow: 0 5px 14px rgba(39, 129, 79, 0.08);
+    }
+
+    .machine-options li label:has(input:checked) {
+        border-color: #27814f;
+        background: #eff8f1;
+        box-shadow: inset 0 0 0 1px #27814f;
+        color: #1e6840;
+    }
+
+    .machine-options input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 auto;
+        margin: 0;
+        accent-color: #27814f;
+        cursor: pointer;
+    }
+
+    .machine-options input[type="checkbox"]:focus-visible {
+        outline: 3px solid rgba(39, 129, 79, 0.24);
+        outline-offset: 3px;
+    }
+
+    .machine-options li label:has(input:focus-visible) {
+        outline: 2px solid #27814f;
+        outline-offset: 2px;
+    }
+
+    .machine-hint {
+        margin: 12px 0 0;
+        color: #728078;
+        font-size: 12px;
+    }
+
+    .package-search {
+        display: flex;
+        align-items: end;
+        gap: 10px;
+        max-width: 700px;
+        margin-bottom: 12px;
+    }
+
+    .package-search .search-field {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .package-search .form-control {
+        text-transform: uppercase;
+    }
+
+    .reprocess-button {
+        min-height: 42px;
+        padding: 9px 16px;
+        border: 0;
+        border-radius: 7px;
+        background: #27814f;
+        color: white;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .reprocess-button:hover {
+        background: #1e6840;
+    }
+
+    .reprocess-button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+    }
+
+    .search-message,
+    .package-summary,
+    .piece-summary {
+        margin: 0 0 18px;
+        color: #53616c;
+        font-size: 13px;
+    }
+
+    .piece-summary {
+        font-weight: 650;
+    }
+
+    .piece-summary.error {
+        color: #b42318;
+    }
+
+    .search-message.error,
+    .form-errors {
+        color: #b42318;
+    }
+
+    .package-summary {
+        display: none;
+        max-width: 850px;
+        padding: 14px 16px;
+        border: 1px solid #d7ebdc;
+        border-radius: 8px;
+        background: #f2f8f4;
+        line-height: 1.6;
+    }
+
+    .package-summary.visible {
+        display: block;
+    }
+
+    .product-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 28px 0 12px;
+    }
+
+    .product-heading h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+        margin-bottom: 22px;
+    }
+
+    .product-table {
+        width: 100%;
+        min-width: 900px;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .product-table th,
+    .product-table td {
+        padding: 9px 8px;
+        border-bottom: 1px solid #edf0f2;
+        color: #35404a;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .product-table th {
+        background: #f7f9f8;
+        color: #59656f;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .product-table .remove-product {
+        border: 0;
+        background: transparent;
+        color: #a33a32;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .empty-products {
+        padding: 18px !important;
+        color: #7b8790 !important;
+        text-align: center;
+    }
+
+    .form-errors {
+        margin: 0 0 16px;
+        padding-left: 20px;
+        font-size: 13px;
+    }
+
+    .package-dialog {
+        width: min(420px, calc(100% - 32px));
+        margin: auto;
+        padding: 28px;
+        border: 0;
+        border-radius: 16px;
+        color: #202a33;
+        text-align: center;
+        box-shadow: 0 18px 60px rgba(22, 35, 28, 0.25);
+    }
+
+    .package-dialog::backdrop {
+        background: rgba(18, 29, 23, 0.55);
+        backdrop-filter: blur(3px);
+    }
+
+    .package-dialog h2 {
+        margin: 0 0 10px;
+        color: #a33a32;
+        font-size: 20px;
+    }
+
+    .package-dialog p {
+        margin: 0 0 20px;
+        color: #59656f;
+        line-height: 1.5;
+    }
+
+    .package-dialog button {
+        min-width: 100px;
+    }
+
+    .field-error {
+        display: block;
+        margin-top: 5px;
+        color: #b42318;
+        font-size: 12px;
+    }
+
+    @media (max-width: 650px) {
+        .reprocess-fields {
+            grid-template-columns: 1fr;
+        }
+
+        .reprocess-panel {
+            padding: 18px;
+        }
+
+        .package-search,
+        .product-heading {
+            align-items: stretch;
+            flex-direction: column;
+        }
+    }
+</style>
+
+<main class="reprocess-form-page">
+    <section class="reprocess-panel" aria-labelledby="reprocess-title">
+        <h1 id="reprocess-title">Registro de reproceso</h1>
+        <p class="reprocess-intro">Ingrese los datos del proceso, busque un paquete con secado finalizado y agregue cada tipo de producto que se obtendrá.</p>
+
+        <form method="post" id="reprocess-form" data-search-url="{{ busqueda_url }}">
+            {% csrf_token %}
+            {{ form.paquete_origen_id }}
+            {{ form.productos_json }}
+            {% if form.non_field_errors or form.productos_json.errors or form.paquete_origen_id.errors %}
+            <ul class="form-errors" role="alert">
+                {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                {% for error in form.productos_json.errors %}<li>{{ error }}</li>{% endfor %}
+                {% for error in form.paquete_origen_id.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="reprocess-fields">
+                <div class="reprocess-field">
+                    <label for="{{ form.fecha.id_for_label }}">{{ form.fecha.label }}</label>
+                    {{ form.fecha }}
+                    {% for error in form.fecha.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="reprocess-field">
+                    <label for="{{ form.nombre_supervisor.id_for_label }}">{{ form.nombre_supervisor.label }}</label>
+                    {{ form.nombre_supervisor }}
+                    {% for error in form.nombre_supervisor.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+            </div>
+
+            <fieldset class="machine-options">
+                <legend>{{ form.maquinas_proceso.label }}</legend>
+                <ul>
+                    {% for maquina in form.maquinas_proceso %}
+                    <li>
+                        <label for="{{ maquina.id_for_label }}">
+                            {{ maquina.tag }}
+                            <span>{{ maquina.choice_label }}</span>
+                        </label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <p class="machine-hint">Seleccione una o varias máquinas que se utilizarán en este proceso.</p>
+                {% for error in form.maquinas_proceso.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </fieldset>
+
+            <div class="package-search">
+                <div class="search-field">
+                    <label for="source-package-code">Código del paquete seco</label>
+                    <input class="form-control" id="source-package-code" type="text" maxlength="32"
+                        autocomplete="off" placeholder="Ejemplo: ASR-20261015-0001">
+                </div>
+                <button class="reprocess-button" id="find-package" type="button">Consultar paquete</button>
+            </div>
+            <p class="search-message" id="search-message" role="status" aria-live="polite"></p>
+            <div class="package-summary" id="package-summary" aria-live="polite"></div>
+            <p class="piece-summary" id="piece-summary" tabindex="-1" aria-live="polite">Consulte el paquete de origen para ver las piezas pendientes.</p>
+
+            <div class="product-heading">
+                <h2>Productos resultantes</h2>
+                <button class="reprocess-button" id="add-product" type="button">Agregar producto</button>
+            </div>
+            <div class="table-scroll">
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo de producto</th>
+                            <th>Largo (m)</th>
+                            <th>Ancho (m)</th>
+                            <th>Espesor (m)</th>
+                            <th>Cantidad de piezas</th>
+                            <th>Calidad visual</th>
+                            <th><span class="visually-hidden">Acción</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-rows"></tbody>
+                </table>
+            </div>
+
+            <button class="reprocess-button" type="submit">Guardar reproceso y generar paquetes</button>
+            <a href="{% url 'reproceso' %}">Cancelar</a>
+        </form>
+    </section>
+
+    <dialog class="package-dialog" id="package-dialog" aria-labelledby="package-dialog-title">
+        <h2 id="package-dialog-title">No se puede usar el paquete</h2>
+        <p id="package-dialog-message">{% for error in form.paquete_origen_id.errors %}{{ error }}{% endfor %}</p>
+        <button class="reprocess-button" id="close-package-dialog" type="button">Entendido</button>
+    </dialog>
+</main>
+
+{{ producto_choices|json_script:"product-choices" }}
+{{ calidad_choices|json_script:"quality-choices" }}
+{{ paquete_inicial|json_script:"source-package" }}
+<script>
+    (() => {
+        const form = document.getElementById('reprocess-form');
+        const packageInput = document.getElementById('source-package-code');
+        const processDate = document.getElementById('id_fecha');
+        const findButton = document.getElementById('find-package');
+        const searchMessage = document.getElementById('search-message');
+        const packageDialog = document.getElementById('package-dialog');
+        const packageDialogMessage = document.getElementById('package-dialog-message');
+        const closePackageDialog = document.getElementById('close-package-dialog');
+        const packageSummary = document.getElementById('package-summary');
+        const packageId = document.getElementById('id_paquete_origen_id');
+        const productRows = document.getElementById('product-rows');
+        const productData = document.getElementById('id_productos_json');
+        const pieceSummary = document.getElementById('piece-summary');
+        const productChoices = JSON.parse(document.getElementById('product-choices').textContent);
+        const qualityChoices = JSON.parse(document.getElementById('quality-choices').textContent);
+        let selectedCode = '';
+
+        const showPackageDialog = text => {
+            packageDialogMessage.textContent = text;
+            packageDialog.showModal();
+            closePackageDialog.focus();
+        };
+
+        const addOption = (select, value, label) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            select.appendChild(option);
+        };
+
+        const createSelect = (choices, selected) => {
+            const select = document.createElement('select');
+            select.required = true;
+            addOption(select, '', 'Seleccione');
+            choices.forEach(([value, label]) => addOption(select, value, label));
+            select.value = selected || '';
+            return select;
+        };
+
+        const createInput = (type, value, min, step) => {
+            const input = document.createElement('input');
+            input.type = type;
+            input.required = true;
+            input.min = min;
+            input.step = step;
+            input.value = value || '';
+            return input;
+        };
+
+        const addProductRow = product => {
+            const row = document.createElement('tr');
+            row.dataset.productRow = 'true';
+            const productSelect = createSelect(productChoices, product?.tipo_producto);
+            const largo = createInput('number', product?.largo, '0.001', '0.001');
+            const ancho = createInput('number', product?.ancho, '0.001', '0.001');
+            const espesor = createInput('number', product?.espesor, '0.001', '0.001');
+            const cantidad = createInput('number', product?.cantidad_piezas, '1', '1');
+            const qualitySelect = createSelect(qualityChoices, product?.calidad_visual);
+            [productSelect, largo, ancho, espesor, cantidad, qualitySelect].forEach(control => {
+                const cell = document.createElement('td');
+                cell.appendChild(control);
+                row.appendChild(cell);
+            });
+            const actionCell = document.createElement('td');
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'remove-product';
+            removeButton.textContent = 'Quitar';
+            removeButton.addEventListener('click', () => {
+                row.remove();
+                syncProducts();
+            });
+            actionCell.appendChild(removeButton);
+            row.appendChild(actionCell);
+            productRows.appendChild(row);
+        };
+
+        const syncProducts = () => {
+            const products = [...productRows.querySelectorAll('[data-product-row]')].map(row => {
+                const controls = row.querySelectorAll('select, input');
+                return {
+                    tipo_producto: controls[0].value,
+                    largo: controls[1].value,
+                    ancho: controls[2].value,
+                    espesor: controls[3].value,
+                    cantidad_piezas: controls[4].value,
+                    calidad_visual: controls[5].value,
+                };
+            });
+            productData.value = JSON.stringify(products);
+            const total = products.reduce((sum, product) => sum + (Number.parseInt(product.cantidad_piezas, 10) || 0), 0);
+            const sourceTotal = Number.parseInt(packageSummary.dataset.pieces || '', 10);
+            if (!Number.isInteger(sourceTotal)) {
+                pieceSummary.textContent = 'Consulte el paquete de origen para ver las piezas pendientes.';
+                pieceSummary.classList.remove('error');
+                return;
+            }
+
+            const remaining = sourceTotal - total;
+            pieceSummary.textContent = remaining === 0
+                ? `Total completo: ${total} de ${sourceTotal} piezas distribuidas.`
+                : remaining > 0
+                    ? `Distribuidas: ${total} de ${sourceTotal} piezas. Faltan ${remaining} por asignar.`
+                    : `Distribuidas: ${total} de ${sourceTotal} piezas. Hay ${Math.abs(remaining)} piezas excedentes.`;
+            pieceSummary.classList.toggle('error', remaining !== 0);
+        };
+
+        const showPackage = data => {
+            packageId.value = data.id;
+            packageInput.value = data.codigo;
+            selectedCode = data.codigo;
+            packageSummary.textContent =
+                `${data.codigo} · Largo: ${data.largo} m · Ancho: ${data.ancho} m · ` +
+                `Espesor: ${data.espesor} m · ` +
+                `${data.cantidad_piezas} piezas · ${data.volumen_total} m³`;
+            packageSummary.dataset.pieces = data.cantidad_piezas;
+            packageSummary.classList.add('visible');
+            syncProducts();
+        };
+
+        packageInput.addEventListener('input', () => {
+            if (packageInput.value.trim().toUpperCase() !== selectedCode) {
+                packageId.value = '';
+                selectedCode = '';
+                packageSummary.classList.remove('visible');
+                searchMessage.textContent = '';
+                searchMessage.classList.remove('error');
+            }
+        });
+
+        findButton.addEventListener('click', async () => {
+            const code = packageInput.value.trim().toUpperCase();
+            if (!code) {
+                const text = 'Ingrese el código del paquete.';
+                searchMessage.textContent = text;
+                searchMessage.classList.add('error');
+                showPackageDialog(text);
+                return;
+            }
+            if (packageId.value && code === selectedCode) {
+                const text = 'Este paquete ya está seleccionado en este reproceso.';
+                searchMessage.textContent = text;
+                searchMessage.classList.add('error');
+                showPackageDialog(text);
+                return;
+            }
+            if (!processDate.value) {
+                const text = 'Seleccione la fecha del reproceso antes de consultar el paquete.';
+                searchMessage.textContent = text;
+                searchMessage.classList.add('error');
+                showPackageDialog(text);
+                processDate.focus();
+                return;
+            }
+
+            findButton.disabled = true;
+            searchMessage.textContent = 'Consultando paquete...';
+            searchMessage.classList.remove('error');
+            packageSummary.classList.remove('visible');
+            packageId.value = '';
+            selectedCode = '';
+            try {
+                const url = new URL(form.dataset.searchUrl, window.location.origin);
+                url.searchParams.set('codigo_paquete', code);
+                url.searchParams.set('fecha', processDate.value);
+                const response = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'No se pudo consultar el paquete.');
+                showPackage(data);
+                searchMessage.textContent = 'Paquete seco encontrado.';
+            } catch (error) {
+                searchMessage.textContent = error.message;
+                searchMessage.classList.add('error');
+                showPackageDialog(error.message || 'No se pudo consultar el paquete.');
+            } finally {
+                findButton.disabled = false;
+            }
+        });
+
+        closePackageDialog.addEventListener('click', () => packageDialog.close());
+        packageDialog.addEventListener('close', () => packageInput.focus());
+        if (packageDialogMessage.textContent.trim()) {
+            packageDialog.showModal();
+            closePackageDialog.focus();
+        }
+
+        document.getElementById('add-product').addEventListener('click', () => addProductRow());
+        productRows.addEventListener('input', syncProducts);
+        productRows.addEventListener('change', syncProducts);
+        form.addEventListener('submit', event => {
+            syncProducts();
+            const total = [...productRows.querySelectorAll('[data-product-row]')].reduce((sum, row) => {
+                const quantityInput = row.querySelectorAll('input[type="number"]')[3];
+                return sum + (Number.parseInt(quantityInput.value, 10) || 0);
+            }, 0);
+            const sourceTotal = Number.parseInt(packageSummary.dataset.pieces || '', 10);
+            if (!Number.isInteger(sourceTotal) || total !== sourceTotal) {
+                event.preventDefault();
+                pieceSummary.focus();
+                pieceSummary.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        });
+
+        const initialProducts = JSON.parse(productData.value || '[]');
+        initialProducts.forEach(addProductRow);
+        const initialPackage = JSON.parse(document.getElementById('source-package').textContent);
+        if (initialPackage) showPackage(initialPackage);
+    })();
+</script>
+{% endblock %}

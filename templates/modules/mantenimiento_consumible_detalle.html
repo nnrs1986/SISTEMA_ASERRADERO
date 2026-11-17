@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ consumible.nombre }} - Consumibles{% endblock %}
+
+{% block page_title %}Mantenimiento · Ficha de consumible{% endblock %}
+
+{% block content %}
+<style>
+    .consumable-detail-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        gap: 18px;
+    }
+
+    .consumable-detail-header,
+    .consumable-detail-section {
+        overflow: hidden;
+        border: 1px solid #e6ebf2;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .055);
+    }
+
+    .consumable-detail-header {
+        padding: 26px 28px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+    }
+
+    .consumable-detail-eyebrow {
+        margin: 0 0 8px;
+        color: rgba(255, 255, 255, .8);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+    }
+
+    .consumable-detail-title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .consumable-detail-header h2 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(24px, 3vw, 32px);
+    }
+
+    .consumable-detail-header p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, .9);
+    }
+
+    .consumable-detail-header .consumable-status {
+        margin-top: 5px;
+        color: #e2e8f0;
+        background: rgba(255, 255, 255, .16);
+    }
+
+    .consumable-detail-header .consumable-status.is-active {
+        color: #d1fae5;
+        background: rgba(6, 95, 70, .4);
+    }
+
+    .consumable-detail-header .consumable-status.is-inactive {
+        color: #ffedd5;
+        background: rgba(154, 52, 18, .4);
+    }
+
+    .consumable-detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 20px;
+    }
+
+    .consumable-detail-button {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, .35);
+        border-radius: 9px;
+        color: #fff;
+        background: rgba(255, 255, 255, .12);
+        font-size: 12px;
+        font-weight: 750;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .consumable-detail-button.danger {
+        border-color: rgba(255, 255, 255, .35);
+        background: rgba(185, 28, 28, .8);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .consumable-detail-section h3 {
+        margin: 0;
+        padding: 16px 20px;
+        border-bottom: 1px solid #edf1f6;
+        color: #1e293b;
+        background: #f8fafc;
+        font-size: 16px;
+    }
+
+    .consumable-detail-fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+        gap: 10px;
+        padding: 17px;
+    }
+
+    .consumable-detail-field {
+        min-width: 0;
+        padding: 11px 12px;
+        border: 1px solid #edf1f6;
+        border-radius: 9px;
+        background: #fcfdff;
+    }
+
+    .consumable-detail-field span {
+        display: block;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .consumable-detail-field strong {
+        display: block;
+        overflow-wrap: anywhere;
+        margin-top: 5px;
+        color: #1e293b;
+        font-size: 13px;
+        font-weight: 650;
+        white-space: pre-wrap;
+    }
+
+    .consumable-detail-photos {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+        gap: 14px;
+        padding: 18px;
+    }
+
+    .consumable-detail-photo {
+        overflow: hidden;
+        margin: 0;
+        border: 1px solid #e6ebf2;
+        border-radius: 11px;
+        background: #f8fafc;
+    }
+
+    .consumable-detail-photo img {
+        display: block;
+        width: 100%;
+        height: 210px;
+        object-fit: contain;
+        background: #fff;
+    }
+
+    .consumable-detail-photo figcaption {
+        padding: 10px 12px;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .consumable-detail-file {
+        margin: 16px 18px;
+        padding: 14px 16px;
+        border: 1px solid #e6ebf2;
+        border-radius: 10px;
+        color: #475569;
+        background: #fcfdff;
+        font-size: 13px;
+    }
+
+    .consumable-detail-file a {
+        color: #4338ca;
+        font-weight: 750;
+    }
+
+    .consumable-detail-empty {
+        margin: 0;
+        padding: 20px;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+        .consumable-detail-header {
+            padding: 21px;
+        }
+    }
+</style>
+
+<main class="consumable-detail-shell">
+    <header class="consumable-detail-header">
+        <p class="consumable-detail-eyebrow">Ficha completa · {{ consumible.codigo_interno }}</p>
+        <div class="consumable-detail-title-row">
+            <div>
+                <h2>{{ consumible.nombre }}</h2>
+                <p>{{ consumible.descripcion|default:"Sin descripción registrada" }}</p>
+            </div>
+            <span class="consumable-status{% if consumible.estado == 'activo' %} is-active{% elif consumible.estado == 'inactivo' %} is-inactive{% endif %}">
+                {% if consumible.estado %}{{ consumible.get_estado_display }}{% else %}Sin estado{% endif %}
+            </span>
+        </div>
+        <nav class="consumable-detail-actions" aria-label="Acciones de consumible">
+            <a class="consumable-detail-button" href="{% url 'mantenimiento_consumibles' %}">Volver al listado</a>
+            <a class="consumable-detail-button" href="{% url 'mantenimiento_consumibles' %}#nuevo-consumible">Registrar otro consumible</a>
+            <a class="consumable-detail-button" href="{% url 'mantenimiento_consumible_editar' consumible.id %}">Editar</a>
+            <form method="post" action="{% url 'mantenimiento_consumible_eliminar' consumible.id %}" onsubmit="return confirm('¿Estás seguro de eliminar este consumible?');">
+                {% csrf_token %}
+                <button class="consumable-detail-button danger" type="submit">Eliminar</button>
+            </form>
+        </nav>
+    </header>
+
+    {% for seccion in secciones %}
+    <section class="consumable-detail-section">
+        <h3>{{ seccion.titulo }}</h3>
+        <div class="consumable-detail-fields">
+            {% for campo in seccion.campos %}
+            <div class="consumable-detail-field">
+                <span>{{ campo.label }}</span>
+                <strong>{{ campo.valor }}{% if campo.label == 'Stock disponible' and consumible.unidad_medida and campo.valor != '—' %} {{ consumible.unidad_medida }}{% endif %}</strong>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+
+    <section class="consumable-detail-section">
+        <h3>Fotografías del consumible</h3>
+        {% if fotos %}
+        <div class="consumable-detail-photos">
+            {% for foto in fotos %}
+            <figure class="consumable-detail-photo">
+                <img src="{{ foto.archivo.url }}" alt="Vista {{ foto.label|lower }} de {{ consumible.nombre }}">
+                <figcaption>{{ foto.label }}</figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="consumable-detail-empty">No se adjuntaron fotografías.</p>
+        {% endif %}
+    </section>
+
+    <section class="consumable-detail-section">
+        <h3>Ficha técnica</h3>
+        {% if consumible.ficha_tecnica %}
+        <p class="consumable-detail-file">
+            Se adjuntó un documento técnico:
+            <a href="{{ consumible.ficha_tecnica.url }}" target="_blank" rel="noopener">Ver o descargar PDF</a>
+        </p>
+        {% else %}
+        <p class="consumable-detail-empty">No se adjuntó una ficha técnica.</p>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}

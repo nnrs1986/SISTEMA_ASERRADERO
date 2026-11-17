@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Órdenes de trabajo - Mantenimiento{% endblock %}
+{% block page_title %}Mantenimiento · Órdenes de trabajo{% endblock %}
+
+{% block content %}
+<style>
+    .work-orders-shell {
+        max-width: 1240px;
+        margin: 0 auto;
+        display: grid;
+        gap: 22px;
+    }
+
+    .work-order-card,
+    .work-order-list {
+        overflow: hidden;
+        border: 1px solid #e5eaf1;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .07);
+    }
+
+    .work-order-header {
+        display: grid;
+        grid-template-columns: 90px minmax(0, 1fr) 165px;
+        align-items: center;
+        gap: 18px;
+        padding: 22px 26px;
+        border-bottom: 1px solid #e8edf4;
+        text-align: center;
+    }
+
+    .work-order-logo {
+        max-width: 82px;
+        max-height: 72px;
+        object-fit: contain;
+    }
+
+    .work-order-company {
+        margin: 0;
+        color: #1e293b;
+        font-size: clamp(18px, 2.5vw, 25px);
+    }
+
+    .work-order-company-name {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .work-order-number {
+        padding: 10px 12px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .work-order-number small {
+        display: block;
+        margin-bottom: 4px;
+        color: #64748b;
+        font-size: 10px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .work-order-form {
+        padding: 24px;
+    }
+
+    .work-order-section {
+        margin: 0 0 20px;
+        padding: 18px;
+        border: 1px solid #e8edf4;
+        border-radius: 12px;
+    }
+
+    .work-order-section legend {
+        padding: 0 8px;
+        color: #334155;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .work-order-fields {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .work-order-field {
+        min-width: 0;
+    }
+
+    .work-order-field.wide {
+        grid-column: span 2;
+    }
+
+    .work-order-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .work-order-field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .work-order-field input:not([type="checkbox"]),
+    .work-order-field select,
+    .work-order-field textarea {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 10px 11px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #fff;
+        color: #1e293b;
+        font: inherit;
+        font-size: 14px;
+    }
+
+    .work-order-field textarea {
+        resize: vertical;
+    }
+
+    .work-order-field input:focus,
+    .work-order-field select:focus,
+    .work-order-field textarea:focus {
+        border-color: #667eea;
+        outline: 3px solid rgba(102, 126, 234, .15);
+    }
+
+    .work-order-check {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 42px;
+        color: #334155;
+        font-weight: 700;
+    }
+
+    .work-order-check label {
+        margin: 0;
+    }
+
+    .work-order-errors {
+        margin: 5px 0 0;
+        color: #b91c1c;
+        font-size: 12px;
+    }
+
+    .work-order-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .work-order-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 9px;
+        background: linear-gradient(135deg, var(--sidebar-start), var(--sidebar-end));
+        color: #fff;
+        cursor: pointer;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .work-order-list-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e8edf4;
+    }
+
+    .work-order-list-heading h2 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 19px;
+    }
+
+    .work-order-list-heading span {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .work-order-table-wrap {
+        overflow-x: auto;
+    }
+
+    .work-order-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .work-order-table th,
+    .work-order-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #edf1f6;
+        color: #334155;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .work-order-table th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 11px;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .work-order-empty {
+        padding: 28px;
+        color: #64748b;
+        text-align: center;
+    }
+
+    .work-order-pagination {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .work-order-pagination a {
+        color: #4338ca;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    @media (max-width: 760px) {
+        .work-order-header {
+            grid-template-columns: 64px 1fr;
+            padding: 18px;
+        }
+
+        .work-order-logo {
+            max-width: 58px;
+        }
+
+        .work-order-number {
+            grid-column: 1 / -1;
+        }
+
+        .work-order-fields {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .work-order-field.wide {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .work-order-form {
+            padding: 14px;
+        }
+
+        .work-order-fields {
+            grid-template-columns: 1fr;
+        }
+
+        .work-order-field.wide,
+        .work-order-field.full {
+            grid-column: auto;
+        }
+    }
+</style>
+
+<div class="work-orders-shell">
+    <section class="work-order-card">
+        <header class="work-order-header">
+            <div>
+                {% if logo_empresa_disponible %}
+                    <img class="work-order-logo" src="{% static empresa.logo_path %}" alt="Logo de {{ empresa.nombre }}">
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="work-order-company">Orden de trabajo</h1>
+                <div class="work-order-company-name">{{ empresa.nombre }}</div>
+            </div>
+            <div class="work-order-number">
+                <small>Número de orden</small>
+                Se asigna al guardar
+            </div>
+        </header>
+
+        <form class="work-order-form" method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="work-order-errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <fieldset class="work-order-section">
+                <legend>Encabezado y solicitud</legend>
+                <div class="work-order-fields">
+                    {% for field in form %}
+                        {% if field.name == 'titulo' or field.name == 'tipo_orden' or field.name == 'duracion_estimada' or field.name == 'actividades_programadas' or field.name == 'fecha_emision' or field.name == 'solicitante' or field.name == 'area_solicitante' or field.name == 'contacto_solicitante' %}
+                            <div class="work-order-field {% if field.name == 'actividades_programadas' %}wide{% endif %}">
+                                {{ field.label_tag }}{{ field }}
+                                {% for error in field.errors %}<div class="work-order-errors">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="work-order-field">
+                        <div class="work-order-check">{{ form.cliente_externo }}{{ form.cliente_externo.label_tag }}</div>
+                        {% for error in form.cliente_externo.errors %}<div class="work-order-errors">{{ error }}</div>{% endfor %}
+                    </div>
+                    {% for field in form %}
+                        {% if field.name == 'nombre_cliente' or field.name == 'contacto_cliente' or field.name == 'contacto_cliente_datos' %}
+                            <div class="work-order-field client-field">{{ field.label_tag }}{{ field }}
+                                {% for error in field.errors %}<div class="work-order-errors">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </fieldset>
+
+            <fieldset class="work-order-section">
+                <legend>Descripción, ubicación y asignación</legend>
+                <div class="work-order-fields">
+                    {% for field in form %}
+                        {% if field.name == 'descripcion_trabajo' or field.name == 'detalle_trabajo' or field.name == 'ubicacion' or field.name == 'activo' or field.name == 'responsable' %}
+                            <div class="work-order-field {% if field.name == 'detalle_trabajo' %}full{% endif %}">
+                                {{ field.label_tag }}{{ field }}
+                                {% for error in field.errors %}<div class="work-order-errors">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </fieldset>
+
+            <fieldset class="work-order-section">
+                <legend>Programación, recursos y costos</legend>
+                <div class="work-order-fields">
+                    {% for field in form %}
+                        {% if field.name == 'fecha_programada' or field.name == 'prioridad' or field.name == 'materiales_estimados' or field.name == 'mano_obra_estimada' %}
+                            <div class="work-order-field {% if field.name == 'materiales_estimados' %}wide{% endif %}">
+                                {{ field.label_tag }}{{ field }}
+                                {% for error in field.errors %}<div class="work-order-errors">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </fieldset>
+
+            <fieldset class="work-order-section">
+                <legend>Ejecución y cierre</legend>
+                <div class="work-order-fields">
+                    {% for field in form %}
+                        {% if field.name == 'materiales_utilizados' or field.name == 'tiempos_ejecucion' or field.name == 'observaciones' or field.name == 'hallazgos' %}
+                            <div class="work-order-field {% if field.name == 'observaciones' or field.name == 'hallazgos' %}wide{% endif %}">
+                                {{ field.label_tag }}{{ field }}
+                                {% for error in field.errors %}<div class="work-order-errors">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </fieldset>
+
+            <fieldset class="work-order-section">
+                <legend>Firmas de cierre</legend>
+                <div class="work-order-fields">
+                    {% for field in form %}
+                        {% if field.name == 'firma_responsable' or field.name == 'firma_supervisor' %}
+                            <div class="work-order-field">{{ field.label_tag }}{{ field }}
+                                {% for error in field.errors %}<div class="work-order-errors">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </fieldset>
+
+            <div class="work-order-actions">
+                <button class="work-order-button" type="submit">Guardar orden de trabajo</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="work-order-list" id="ordenes-registradas">
+        <div class="work-order-list-heading">
+            <h2>Órdenes registradas</h2>
+            <span>{{ ordenes.paginator.count }} registro{{ ordenes.paginator.count|pluralize:"s" }}</span>
+        </div>
+        {% if ordenes %}
+            <div class="work-order-table-wrap">
+                <table class="work-order-table">
+                    <thead>
+                        <tr>
+                            <th>N.º de orden</th>
+                            <th>Título</th>
+                            <th>Tipo</th>
+                            <th>Emisión</th>
+                            <th>Solicitante</th>
+                            <th>Responsable</th>
+                            <th>Prioridad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orden in ordenes %}
+                            <tr>
+                                <td><strong>OT-{{ orden.numero_orden|stringformat:"05d" }}</strong></td>
+                                <td>{{ orden.titulo }}</td>
+                                <td>{{ orden.get_tipo_orden_display }}</td>
+                                <td>{{ orden.fecha_emision|date:"d/m/Y" }}</td>
+                                <td>{{ orden.solicitante }}</td>
+                                <td>{{ orden.responsable|default:"—" }}</td>
+                                <td>{{ orden.get_prioridad_display|default:"—" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if ordenes.has_other_pages %}
+                <nav class="work-order-pagination" aria-label="Paginación de órdenes">
+                    {% if ordenes.has_previous %}<a href="?page={{ ordenes.previous_page_number }}#ordenes-registradas">Anterior</a>{% endif %}
+                    <span>Página {{ ordenes.number }} de {{ ordenes.paginator.num_pages }}</span>
+                    {% if ordenes.has_next %}<a href="?page={{ ordenes.next_page_number }}#ordenes-registradas">Siguiente</a>{% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="work-order-empty">Aún no hay órdenes registradas. Completa el formulario para crear la primera.</div>
+        {% endif %}
+    </section>
+</div>
+
+<script>
+    (function () {
+        const externalClientCheckbox = document.getElementById('id_cliente_externo');
+        const clientFields = document.querySelectorAll('.client-field');
+
+        function updateClientFields() {
+            clientFields.forEach(function (field) {
+                field.hidden = !externalClientCheckbox.checked;
+            });
+        }
+
+        externalClientCheckbox.addEventListener('change', updateClientFields);
+        updateClientFields();
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ module }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}{{ module }}{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <h3>Gestión de personal</h3>
+
+    <div class="personal-summary">
+        <div class="summary-card summary-colaboradores">
+            <span class="summary-label">Total colaboradores</span>
+            <strong>{{ resumen.total_colaboradores }}</strong>
+        </div>
+        <div class="summary-card summary-activos">
+            <span class="summary-label">Activos</span>
+            <strong>{{ resumen.activos }}</strong>
+        </div>
+        <div class="summary-card summary-ausentes">
+            <span class="summary-label">Ausentes</span>
+            <strong>{{ resumen.ausentes }}</strong>
+        </div>
+        <div class="summary-card summary-cumpleanos">
+            <span class="summary-label">Cumpleaños</span>
+            <strong>{{ resumen.cumpleanos }}</strong>
+        </div>
+    </div>
+
+    <div class="personal-actions">
+        {% for action in quick_actions %}
+        {% if action.url %}
+        <a href="{{ action.url }}" class="action-card action-card-link">
+        {% else %}
+        <div class="action-card">
+        {% endif %}
+            <div class="action-icon">{{ action.icono }}</div>
+            <div>
+                <h4>{{ action.titulo }}</h4>
+                <p>{{ action.descripcion }}</p>
+            </div>
+        {% if action.url %}
+        </a>
+        {% else %}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="records-panel">
+        <div class="records-header">
+            <h4>Trabajadores registrados</h4>
+            <a href="{% url 'personal_registrar' %}" class="btn btn-primary">Registrar nuevo</a>
+        </div>
+
+        {% if trabajadores %}
+            <div class="table-responsive">
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Cargo</th>
+                            <th>Área</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trabajador in trabajadores %}
+                        <tr>
+                            <td>{{ trabajador.codigo_trabajador|default:trabajador.id }}</td>
+                            <td>{{ trabajador.nombres }}</td>
+                            <td>{{ trabajador.cargo|default:'Sin cargo' }}</td>
+                            <td>{{ trabajador.area_trabajo|default:'Sin asignar' }}</td>
+                            <td>
+                                {% if trabajador.trabajador_activo %}
+                                    <span class="status status-active">Activo</span>
+                                {% else %}
+                                    <span class="status status-inactive">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'personal_ver' trabajador.pk %}" class="btn btn-view">Ver</a>
+                                    <a href="{% url 'personal_editar' trabajador.pk %}" class="btn btn-edit">Editar</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="placeholder-panel">
+                <p>No hay trabajadores registrados. Inicia creando el primer registro del personal.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .personal-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,244,249,0.9));
+        border-radius: 12px;
+        padding: 18px 20px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border-left: 5px solid var(--module-start);
+    }
+
+    .summary-label {
+        display: block;
+        font-size: 12px;
+        color: #56657a;
+        margin-bottom: 8px;
+    }
+
+    .summary-card strong {
+        font-size: 28px;
+        color: #1f2d3d;
+    }
+
+    .summary-colaboradores { border-left-color: #4f46e5; }
+    .summary-activos { border-left-color: #10b981; }
+    .summary-ausentes { border-left-color: #f59e0b; }
+    .summary-cumpleanos { border-left-color: #ec4899; }
+
+    .personal-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .action-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .action-card-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
+    }
+
+    .action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(79, 70, 229, 0.1);
+        font-size: 22px;
+    }
+
+    .action-card h4 {
+        font-size: 16px;
+        margin-bottom: 6px;
+        color: #1f2937;
+    }
+
+    .action-card p {
+        font-size: 13px;
+        color: #5b697a;
+    }
+
+    .records-panel {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        padding: 22px;
+    }
+
+    .records-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .records-header h4 {
+        margin: 0;
+        color: #1f2d3d;
+        font-size: 18px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .records-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .records-table th,
+    .records-table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .records-table th {
+        color: #475569;
+        background: #f8fafc;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.12);
+        color: #047857;
+    }
+
+    .status-inactive {
+        background: rgba(245, 158, 11, 0.12);
+        color: #a16207;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        text-decoration: none;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: var(--module-start);
+        color: #fff;
+    }
+
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-view {
+        background: #ecfeff;
+        color: #0f766e;
+        border-color: #a7f3d0;
+    }
+
+    .btn-edit {
+        background: #eef2ff;
+        color: #3730a3;
+        border-color: #dfe7ff;
+    }
+
+    .placeholder-panel {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(59, 130, 246, 0.05));
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        border-radius: 12px;
+        padding: 22px;
+    }
+
+    .placeholder-panel h4 {
+        color: #1f2d3d;
+        margin-bottom: 10px;
+        font-size: 18px;
+    }
+
+    .placeholder-panel p {
+        color: #475569;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}

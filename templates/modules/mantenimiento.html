@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ module }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}{{ module }}{% endblock %}
+
+{% block content %}
+<style>
+    .module-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .module-banner {
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 24px 26px;
+        box-shadow: 0 12px 28px rgba(31, 45, 61, 0.12);
+    }
+
+    .module-banner .eyebrow {
+        display: inline-block;
+        letter-spacing: 0.12em;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        opacity: 0.8;
+        margin-bottom: 8px;
+    }
+
+    .module-banner h3 {
+        margin: 0;
+        color: white;
+        font-size: clamp(24px, 3vw, 34px);
+        letter-spacing: -0.03em;
+    }
+
+    .module-banner p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 15px;
+    }
+
+    .module-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow: visible;
+        padding-bottom: 0;
+        width: fit-content;
+        max-width: 100%;
+    }
+
+    .module-tile {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        min-height: 72px;
+        width: fit-content;
+        max-width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 5px 12px rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        color: #1e293b;
+        font-size: 12.5px;
+        font-weight: 700;
+        text-align: left;
+        flex: 0 0 auto;
+    }
+
+    .module-tile:hover {
+        transform: translateY(-2px);
+        border-color: rgba(79, 70, 229, 0.25);
+        box-shadow: 0 14px 24px rgba(79, 70, 229, 0.12);
+    }
+
+    .module-tile:focus-visible {
+        outline: 3px solid rgba(79, 70, 229, 0.25);
+        outline-offset: 2px;
+    }
+
+    .module-tile-icon {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(79, 70, 229, 0.1);
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .module-tile-label {
+        display: block;
+        line-height: 1.3;
+        color: #1e293b;
+    }
+</style>
+
+<div class="module-container module-shell">
+    <section class="module-banner">
+        <span class="eyebrow">Módulo</span>
+        <h3>{{ module }}</h3>
+        <p>Acceso rápido a las áreas principales del mantenimiento.</p>
+    </section>
+
+    <div class="module-grid" aria-label="Menú de mantenimiento">
+        <a href="{% url 'mantenimiento_general' %}" class="module-tile">
+            <span class="module-tile-icon">📋</span>
+            <span class="module-tile-label">General</span>
+        </a>
+
+        <a href="{% url 'mantenimiento_activos' %}" class="module-tile">
+            <span class="module-tile-icon">🏭</span>
+            <span class="module-tile-label">Activos</span>
+        </a>
+
+        <a href="{% url 'mantenimiento_consumibles' %}" class="module-tile">
+            <span class="module-tile-icon">🧰</span>
+            <span class="module-tile-label">Consumibles</span>
+        </a>
+
+        <a href="{% url 'mantenimiento_herramientas' %}" class="module-tile">
+            <span class="module-tile-icon">🔨</span>
+            <span class="module-tile-label">Herramientas</span>
+        </a>
+
+        <a href="{% url 'mantenimiento_ordenes_trabajo' %}" class="module-tile">
+            <span class="module-tile-icon">📝</span>
+            <span class="module-tile-label">Órdenes de trabajo</span>
+        </a>
+
+        <a href="{% url 'mantenimiento_financiero' %}" class="module-tile">
+            <span class="module-tile-icon">💳</span>
+            <span class="module-tile-label">Financiero</span>
+        </a>
+
+        <a href="{% url 'mantenimiento_indicadores' %}" class="module-tile">
+            <span class="module-tile-icon">📊</span>
+            <span class="module-tile-label">Indicadores</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

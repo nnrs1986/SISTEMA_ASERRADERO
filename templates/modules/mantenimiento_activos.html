@@ -1,0 +1,730 @@
+{% extends 'base.html' %}
+
+{% block title %}Activos - Mantenimiento{% endblock %}
+
+{% block page_title %}Mantenimiento · Activos{% endblock %}
+
+{% block content %}
+<style>
+    .assets-shell {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+    }
+
+    .assets-header,
+    .assets-line,
+    .asset-card {
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .07);
+    }
+
+    .assets-header {
+        padding: 26px 30px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+    }
+
+    .assets-eyebrow {
+        margin: 0 0 7px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        opacity: .8;
+    }
+
+    .assets-header h2 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(24px, 3vw, 32px);
+    }
+
+    .assets-header p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, .9);
+    }
+
+    .assets-context {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 22px;
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, .22);
+        font-size: 13px;
+    }
+
+    .assets-context strong {
+        color: #fff;
+    }
+
+    .assets-lines {
+        display: grid;
+        gap: 18px;
+    }
+
+    .assets-line {
+        overflow: hidden;
+        border: 1px solid #e8edf4;
+    }
+
+    .assets-line-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 17px 22px;
+        border-bottom: 1px solid #edf1f6;
+        background: #f8fafc;
+    }
+
+    .assets-line-icon {
+        display: grid;
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 11px;
+        background: #e8edff;
+        font-size: 19px;
+    }
+
+    .assets-line-heading h3 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 17px;
+    }
+
+    .assets-line-heading p {
+        margin: 3px 0 0;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .assets-machine-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+        gap: 14px;
+        padding: 18px;
+    }
+
+    .asset-card {
+        padding: 18px;
+        border: 1px solid #e5eaf1;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
+    }
+
+    .asset-card-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .asset-card h4 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 16px;
+    }
+
+    .asset-status {
+        flex: 0 0 auto;
+        padding: 5px 9px;
+        border-radius: 20px;
+        color: #64748b;
+        background: #f1f5f9;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .asset-status.is-complete {
+        color: #047857;
+        background: #d1fae5;
+    }
+
+    .asset-specs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 16px 0;
+    }
+
+    .asset-spec {
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid #edf1f6;
+        border-radius: 9px;
+        background: #fbfcfe;
+    }
+
+    .asset-spec dt {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .asset-spec dd {
+        overflow-wrap: anywhere;
+        margin: 4px 0 0;
+        color: #1e293b;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .asset-elements {
+        display: grid;
+        gap: 9px;
+        margin: 16px 0;
+    }
+
+    .asset-element {
+        padding: 11px 12px;
+        border: 1px solid #edf1f6;
+        border-radius: 9px;
+        background: #fbfcfe;
+    }
+
+    .asset-element h5 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 13px;
+    }
+
+    .asset-element p {
+        margin: 5px 0 0;
+        color: #475569;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .asset-element-types {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 8px;
+    }
+
+    .asset-element-type {
+        padding: 3px 8px;
+        border-radius: 20px;
+        color: #4338ca;
+        background: #eef2ff;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .asset-empty {
+        margin: 16px 0;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .asset-editor {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #edf1f6;
+    }
+
+    .asset-editor[hidden] {
+        display: none;
+    }
+
+    .asset-editor h5 {
+        margin: 0 0 12px;
+        color: #334155;
+        font-size: 13px;
+    }
+
+    .asset-editor .asset-components-heading {
+        margin-top: 18px;
+    }
+
+    .asset-components-help {
+        margin: 0 0 12px;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .asset-spec-rows {
+        display: grid;
+        gap: 8px;
+    }
+
+    .asset-spec-row {
+        display: grid;
+        grid-template-columns: minmax(95px, .7fr) minmax(0, 1.3fr) 36px;
+        gap: 7px;
+    }
+
+    .asset-spec-row input {
+        width: 100%;
+        min-width: 0;
+        min-height: 39px;
+        padding: 8px 10px;
+        border: 1px solid #d5deea;
+        border-radius: 8px;
+        color: #1e293b;
+        font: inherit;
+        font-size: 13px;
+    }
+
+    .asset-spec-row input:focus {
+        outline: 3px solid rgba(79, 70, 229, .14);
+        border-color: #6366f1;
+    }
+
+    .asset-element-rows {
+        display: grid;
+        gap: 10px;
+    }
+
+    .asset-element-row {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid #dfe6ef;
+        border-radius: 10px;
+        background: #fbfcfe;
+    }
+
+    .asset-element-fields {
+        display: grid;
+        grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) 36px;
+        gap: 7px;
+    }
+
+    .asset-element-row input[type="text"],
+    .asset-element-row textarea {
+        width: 100%;
+        min-width: 0;
+        min-height: 39px;
+        padding: 8px 10px;
+        border: 1px solid #d5deea;
+        border-radius: 8px;
+        color: #1e293b;
+        font: inherit;
+        font-size: 13px;
+    }
+
+    .asset-element-row textarea {
+        resize: vertical;
+    }
+
+    .asset-element-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+    }
+
+    .asset-element-categories label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #475569;
+        font-size: 12px;
+    }
+
+    .asset-element-categories input {
+        accent-color: #4f46e5;
+    }
+
+    .asset-element-row input:focus,
+    .asset-element-row textarea:focus {
+        outline: 3px solid rgba(79, 70, 229, .14);
+        border-color: #6366f1;
+    }
+
+    .asset-remove-spec {
+        border: 0;
+        border-radius: 8px;
+        color: #b91c1c;
+        background: #fef2f2;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .asset-editor-actions,
+    .assets-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 12px;
+    }
+
+    .asset-add-spec {
+        border: 0;
+        color: #4f46e5;
+        background: transparent;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .maintenance-action {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 15px;
+        border: 0;
+        border-radius: 8px;
+        color: #fff;
+        background: #4f46e5;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .maintenance-action.secondary {
+        border: 1px solid #d5deea;
+        color: #334155;
+        background: #fff;
+    }
+
+    .asset-error {
+        margin: 10px 0 0;
+        color: #b91c1c;
+        font-size: 12px;
+    }
+
+    .assets-empty {
+        padding: 34px 24px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 14px;
+        color: #64748b;
+        background: #fff;
+        text-align: center;
+    }
+
+    @media (max-width: 580px) {
+        .assets-header {
+            padding: 22px;
+        }
+
+        .assets-machine-grid {
+            padding: 12px;
+        }
+
+        .asset-specs {
+            grid-template-columns: 1fr;
+        }
+
+        .asset-spec-row {
+            grid-template-columns: minmax(0, 1fr) 36px;
+        }
+
+        .asset-spec-row input:first-child {
+            grid-column: 1;
+        }
+
+        .asset-spec-row input:nth-child(2) {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .asset-spec-row button {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+        }
+
+        .asset-element-fields {
+            grid-template-columns: minmax(0, 1fr) 36px;
+        }
+
+        .asset-element-fields input,
+        .asset-element-fields textarea {
+            grid-column: 1;
+        }
+
+        .asset-element-fields button {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+        }
+    }
+</style>
+
+<main class="assets-shell">
+    <header class="assets-header">
+        <p class="assets-eyebrow">Mantenimiento · Inventario técnico</p>
+        <h2>Activos del aserradero</h2>
+        <p>Completa la ficha técnica de cada máquina organizada en producción.</p>
+        <div class="assets-context">
+            <span>Planta: <strong>{{ configuracion.nombre_aserradero }}</strong></span>
+            <span>Ubicación: <strong>{{ configuracion.ciudad_parroquia }}</strong></span>
+            <span>Identificación: <strong>{{ configuracion.tag_identificacion|default:'---' }}</strong></span>
+        </div>
+    </header>
+
+    {% if maquinas_activos %}
+        <div class="assets-lines">
+            {% regroup maquinas_activos by linea as lineas_activos %}
+            {% for grupo in lineas_activos %}
+                <section class="assets-line">
+                    <header class="assets-line-heading">
+                        <span class="assets-line-icon" aria-hidden="true">🏭</span>
+                        <div>
+                            <h3>{{ grupo.grouper }}</h3>
+                            <p>Máquinas registradas en organización de producción</p>
+                        </div>
+                    </header>
+
+                    <div class="assets-machine-grid">
+                        {% for item in grupo.list %}
+                            <article class="asset-card">
+                                <div class="asset-card-heading">
+                                    <h4>{{ item.maquina }}</h4>
+                                    {% if item.especificaciones or item.elementos %}
+                                        <span class="asset-status is-complete">Ficha técnica</span>
+                                    {% else %}
+                                        <span class="asset-status">Pendiente</span>
+                                    {% endif %}
+                                </div>
+
+                                {% if item.especificaciones %}
+                                    <dl class="asset-specs">
+                                        {% for especificacion in item.especificaciones %}
+                                            <div class="asset-spec">
+                                                <dt>{{ especificacion.nombre }}</dt>
+                                                <dd>{{ especificacion.valor }}</dd>
+                                            </div>
+                                        {% endfor %}
+                                    </dl>
+                                {% endif %}
+
+                                {% if item.elementos %}
+                                    <div class="asset-elements" aria-label="Elementos y componentes">
+                                        {% for elemento in item.elementos %}
+                                            <section class="asset-element">
+                                                <h5>{{ elemento.tipo_elemento }}</h5>
+                                                <p>{{ elemento.descripcion }}</p>
+                                                <div class="asset-element-types">
+                                                    {% for tipo in elemento.tipos %}
+                                                        <span class="asset-element-type">
+                                                            {% if tipo == 'mecanico' %}Mecánico
+                                                            {% elif tipo == 'electrico' %}Eléctrico
+                                                            {% elif tipo == 'manual' %}Manual
+                                                            {% elif tipo == 'otro' %}Otro{% endif %}
+                                                        </span>
+                                                    {% endfor %}
+                                                </div>
+                                            </section>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if not item.especificaciones and not item.elementos %}
+                                    <p class="asset-empty">Aún no se han agregado especificaciones.</p>
+                                {% endif %}
+
+                                <button
+                                    type="button"
+                                    class="maintenance-action secondary asset-toggle"
+                                    aria-expanded="{% if item.editor_abierto %}true{% else %}false{% endif %}"
+                                >
+                                    {% if item.especificaciones or item.elementos %}Editar ficha{% else %}＋ Agregar información{% endif %}
+                                </button>
+
+                                <form
+                                    method="post"
+                                    class="asset-editor"
+                                    {% if not item.editor_abierto %}hidden{% endif %}
+                                >
+                                    {% csrf_token %}
+                                    <input type="hidden" name="linea_descripcion" value="{{ item.linea }}">
+                                    <input type="hidden" name="maquina" value="{{ item.maquina }}">
+                                    {{ item.form.especificaciones }}
+                                    {{ item.form.elementos }}
+                                    {% if item.form.especificaciones.errors %}
+                                        <ul class="asset-error">{{ item.form.especificaciones.errors }}</ul>
+                                    {% endif %}
+                                    <h5>Especificaciones de la máquina</h5>
+                                    <div class="asset-spec-rows" aria-label="Especificaciones técnicas"></div>
+                                    <div class="asset-editor-actions">
+                                        <button type="button" class="asset-add-spec">＋ Agregar especificación</button>
+                                    </div>
+                                    <h5 class="asset-components-heading">Elementos y componentes de la máquina</h5>
+                                    <p class="asset-components-help">
+                                        Registra motores u otros elementos por separado; puedes agregar varios.
+                                    </p>
+                                    {% if item.form.elementos.errors %}
+                                        <ul class="asset-error">{{ item.form.elementos.errors }}</ul>
+                                    {% endif %}
+                                    <div class="asset-element-rows" aria-label="Elementos de la máquina"></div>
+                                    <div class="asset-editor-actions">
+                                        <button type="button" class="asset-add-element asset-add-spec">＋ Agregar elemento</button>
+                                        <button type="submit" class="maintenance-action">Guardar ficha</button>
+                                    </div>
+                                </form>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="assets-empty">
+            <h3>No hay máquinas organizadas todavía</h3>
+            <p>Agrega las líneas y máquinas en la ficha general para poder registrar sus activos.</p>
+            <a class="maintenance-action" href="{% url 'mantenimiento_general' %}?editar=1">Configurar producción</a>
+        </div>
+    {% endif %}
+
+    <div class="assets-actions">
+        <a class="maintenance-action secondary" href="{% url 'mantenimiento' %}">Volver a Mantenimiento</a>
+        <a class="maintenance-action secondary" href="{% url 'mantenimiento_general' %}">Ver ficha general</a>
+    </div>
+</main>
+
+<script>
+    (() => {
+        const sugeridas = ['Motor', 'Marca', 'KVA', 'RPM', 'Tamaño'];
+
+        function crearFila(contenedor, nombre = '', valor = '') {
+            const fila = document.createElement('div');
+            fila.className = 'asset-spec-row';
+
+            const nombreInput = document.createElement('input');
+            nombreInput.type = 'text';
+            nombreInput.maxLength = 80;
+            nombreInput.placeholder = 'Especificación';
+            nombreInput.setAttribute('aria-label', 'Nombre de la especificación');
+            nombreInput.value = nombre;
+
+            const valorInput = document.createElement('input');
+            valorInput.type = 'text';
+            valorInput.maxLength = 250;
+            valorInput.placeholder = 'Valor';
+            valorInput.setAttribute('aria-label', 'Valor de la especificación');
+            valorInput.value = valor;
+
+            const quitar = document.createElement('button');
+            quitar.type = 'button';
+            quitar.className = 'asset-remove-spec';
+            quitar.textContent = '×';
+            quitar.setAttribute('aria-label', 'Quitar especificación');
+            quitar.addEventListener('click', () => fila.remove());
+
+            fila.append(nombreInput, valorInput, quitar);
+            contenedor.append(fila);
+        }
+
+        function crearElemento(contenedor, elemento = {}) {
+            const fila = document.createElement('div');
+            fila.className = 'asset-element-row';
+
+            const campos = document.createElement('div');
+            campos.className = 'asset-element-fields';
+
+            const tipoInput = document.createElement('input');
+            tipoInput.type = 'text';
+            tipoInput.maxLength = 80;
+            tipoInput.placeholder = 'Tipo de elemento (ej.: Motor)';
+            tipoInput.setAttribute('aria-label', 'Tipo de elemento');
+            tipoInput.value = elemento.tipo_elemento || '';
+
+            const descripcion = document.createElement('textarea');
+            descripcion.maxLength = 500;
+            descripcion.rows = 2;
+            descripcion.placeholder = 'Describe el elemento';
+            descripcion.setAttribute('aria-label', 'Descripción del elemento');
+            descripcion.value = elemento.descripcion || '';
+
+            const quitar = document.createElement('button');
+            quitar.type = 'button';
+            quitar.className = 'asset-remove-spec';
+            quitar.textContent = '×';
+            quitar.setAttribute('aria-label', 'Quitar elemento');
+            quitar.addEventListener('click', () => fila.remove());
+            campos.append(tipoInput, descripcion, quitar);
+
+            const categorias = document.createElement('div');
+            categorias.className = 'asset-element-categories';
+            [
+                ['mecanico', 'Mecánico'],
+                ['electrico', 'Eléctrico'],
+                ['manual', 'Manual'],
+                ['otro', 'Otro'],
+            ].forEach(([valor, etiqueta]) => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = valor;
+                checkbox.checked = (elemento.tipos || []).includes(valor);
+                label.append(checkbox, document.createTextNode(etiqueta));
+                categorias.append(label);
+            });
+
+            fila.append(campos, categorias);
+            contenedor.append(fila);
+        }
+
+        document.querySelectorAll('.asset-card').forEach(card => {
+            const editor = card.querySelector('.asset-editor');
+            const botonAlternar = card.querySelector('.asset-toggle');
+            const contenedor = card.querySelector('.asset-spec-rows');
+            const elementosContenedor = card.querySelector('.asset-element-rows');
+            const campoJson = editor.querySelector('input[name="especificaciones"]');
+            const elementosJson = editor.querySelector('input[name="elementos"]');
+
+            try {
+                const existentes = JSON.parse(campoJson.value || '[]');
+                if (Array.isArray(existentes) && existentes.length) {
+                    existentes.forEach(item => crearFila(contenedor, item.nombre || '', item.valor || ''));
+                } else {
+                    sugeridas.forEach(nombre => crearFila(contenedor, nombre));
+                }
+            } catch (error) {
+                crearFila(contenedor);
+            }
+
+            try {
+                const elementos = JSON.parse(elementosJson.value || '[]');
+                if (Array.isArray(elementos)) {
+                    elementos.forEach(elemento => crearElemento(elementosContenedor, elemento));
+                }
+            } catch (error) {
+                crearElemento(elementosContenedor);
+            }
+
+            botonAlternar.addEventListener('click', () => {
+                editor.hidden = !editor.hidden;
+                botonAlternar.setAttribute('aria-expanded', String(!editor.hidden));
+            });
+
+            editor.querySelector('.asset-add-spec').addEventListener('click', () => {
+                crearFila(contenedor);
+                contenedor.lastElementChild.querySelector('input').focus();
+            });
+
+            editor.querySelector('.asset-add-element').addEventListener('click', () => {
+                crearElemento(elementosContenedor);
+                elementosContenedor.lastElementChild.querySelector('input').focus();
+            });
+
+            editor.addEventListener('submit', () => {
+                const especificaciones = Array.from(contenedor.querySelectorAll('.asset-spec-row'))
+                    .map(fila => {
+                        const campos = fila.querySelectorAll('input');
+                        return {nombre: campos[0].value, valor: campos[1].value};
+                    });
+                campoJson.value = JSON.stringify(especificaciones);
+
+                const elementos = Array.from(elementosContenedor.querySelectorAll('.asset-element-row'))
+                    .map(fila => ({
+                        tipo_elemento: fila.querySelector('input[type="text"]').value,
+                        descripcion: fila.querySelector('textarea').value,
+                        tipos: Array.from(fila.querySelectorAll('input[type="checkbox"]:checked'))
+                            .map(checkbox => checkbox.value),
+                    }));
+                elementosJson.value = JSON.stringify(elementos);
+            });
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ module }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}{{ module }}{% endblock %}
+
+{% block content %}
+<style>
+    .inventory-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .inventory-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 25px;
+        border-radius: 12px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        box-shadow: 0 12px 32px rgba(79, 70, 229, 0.18);
+    }
+
+    .inventory-header h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+    }
+
+    .inventory-header p {
+        margin: 0;
+        opacity: 0.92;
+    }
+
+    .inventory-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+    }
+
+    .summary-card {
+        padding: 18px 16px;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .summary-card .label {
+        display: block;
+        margin-bottom: 10px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .summary-card .value {
+        font-size: clamp(18px, 1.7vw, 28px);
+        font-weight: 800;
+        line-height: 1.2;
+        color: #1f2937;
+        word-break: break-word;
+    }
+
+    .inventory-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 20px;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .inventory-toolbar .search-box {
+        flex: 1 1 320px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .inventory-toolbar input {
+        width: 100%;
+        min-height: 46px;
+        padding: 10px 14px;
+        border: 1px solid #dbe1f0;
+        border-radius: 8px;
+        font: inherit;
+        color: #1f2937;
+    }
+
+    .inventory-toolbar button {
+        min-height: 46px;
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--module-start);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .inventory-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px 4px;
+    }
+
+    .inventory-filters a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 1px solid #dfe6f5;
+        border-radius: 999px;
+        color: #334155;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        background: white;
+    }
+
+    .inventory-filters a.active {
+        background: rgba(79, 70, 229, 0.12);
+        border-color: rgba(79, 70, 229, 0.45);
+        color: var(--module-start);
+    }
+
+    .inventory-table-wrap {
+        overflow-x: auto;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .inventory-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .inventory-table thead {
+        background: #f8faff;
+    }
+
+    .inventory-table th,
+    .inventory-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #edf1f7;
+        color: #334155;
+        font-size: 13px;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .inventory-table th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+    }
+
+    .inventory-table tbody tr.sold-row {
+        background: #f8fafc;
+        opacity: 0.85;
+    }
+
+    .inventory-table tbody tr:hover {
+        background: #f8faff;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .status-badge.aserrio {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-badge.secado {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .status-badge.reproceso {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-badge.vendido {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .inventory-empty {
+        padding: 32px 18px;
+        color: #475569;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+        .inventory-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="inventory-shell">
+    <section class="inventory-header">
+        <div>
+            <h1>Inventario general</h1>
+            <p>Control completo de producción y stock por departamento.</p>
+        </div>
+    </section>
+
+    <section class="inventory-summary">
+        <div class="summary-card">
+            <span class="label">Stock activo</span>
+            <span class="value">{{ total_stock }}</span>
+        </div>
+        <div class="summary-card">
+            <span class="label">Aserrío</span>
+            <span class="value">{{ totales.aserrio }}</span>
+        </div>
+        <div class="summary-card">
+            <span class="label">Secado</span>
+            <span class="value">{{ totales.secado }}</span>
+        </div>
+        <div class="summary-card">
+            <span class="label">Reproceso</span>
+            <span class="value">{{ totales.reproceso }}</span>
+        </div>
+        <div class="summary-card">
+            <span class="label">m³ total</span>
+            <span class="value">{{ m3_total|floatformat:"3u" }} m³</span>
+        </div>
+    </section>
+
+    <section class="inventory-toolbar">
+        <div class="search-box">
+            <form method="get" style="display: flex; width: 100%; gap: 10px;">
+                <input type="hidden" name="filtro" value="{{ filtro }}">
+                <input type="text" name="q" value="{{ texto_busqueda }}" placeholder="Buscar por código, departamento o estado">
+                <button type="submit">Buscar</button>
+            </form>
+        </div>
+    </section>
+
+    <nav class="inventory-filters" aria-label="Filtros de inventario">
+        <a href="?filtro=todos{% if texto_busqueda %}&q={{ texto_busqueda|urlencode }}{% endif %}" class="{% if filtro == 'todos' %}active{% endif %}">Todos ({{ totales.todos }})</a>
+        <a href="?filtro=aserrio{% if texto_busqueda %}&q={{ texto_busqueda|urlencode }}{% endif %}" class="{% if filtro == 'aserrio' %}active{% endif %}">Aserrío ({{ totales.aserrio }})</a>
+        <a href="?filtro=secado{% if texto_busqueda %}&q={{ texto_busqueda|urlencode }}{% endif %}" class="{% if filtro == 'secado' %}active{% endif %}">Secado ({{ totales.secado }})</a>
+        <a href="?filtro=reproceso{% if texto_busqueda %}&q={{ texto_busqueda|urlencode }}{% endif %}" class="{% if filtro == 'reproceso' %}active{% endif %}">Reproceso ({{ totales.reproceso }})</a>
+        <a href="?filtro=vendidos{% if texto_busqueda %}&q={{ texto_busqueda|urlencode }}{% endif %}" class="{% if filtro == 'vendidos' %}active{% endif %}">Vendidos ({{ totales.vendidos }})</a>
+    </nav>
+
+    <section class="inventory-table-wrap">
+        {% if items %}
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Fecha</th>
+                    <th>Medidas</th>
+                    <th>Volumen</th>
+                    <th>Departamento</th>
+                    <th>Estado</th>
+                    <th>Observación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr class="{% if item.vendido %}sold-row{% endif %}">
+                    <td><strong>{{ item.codigo }}</strong></td>
+                    <td>{{ item.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ item.largo }} × {{ item.ancho }} × {{ item.espesor }} m</td>
+                    <td>{{ item.volumen|floatformat:"3u" }} m³</td>
+                    <td>{{ item.departamento }}</td>
+                    <td>
+                        {% if item.vendido %}
+                            <span class="status-badge vendido">Vendido</span>
+                        {% elif item.estado == 'aserrio' %}
+                            <span class="status-badge aserrio">Verde</span>
+                        {% elif item.estado == 'secado' %}
+                            <span class="status-badge secado">Secado</span>
+                        {% else %}
+                            <span class="status-badge reproceso">Reproceso</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.vendido %}
+                            Ya no forma parte del stock actual.
+                        {% else %}
+                            Disponible para selección.
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="inventory-empty">
+            No se encontraron paquetes para el filtro seleccionado.
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

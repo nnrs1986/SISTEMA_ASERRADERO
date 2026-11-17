@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 30px;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .form-header h1 {
+        color: #333;
+        font-size: 24px;
+    }
+
+    .form-header .icon {
+        font-size: 32px;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+        color: var(--module-start);
+        font-size: 16px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        margin-bottom: 8px;
+        color: #333;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .form-control {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: white;
+        color: #333;
+        font: inherit;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--module-start);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--module-start) 12%, transparent);
+    }
+
+    .checkbox-select {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 10px 16px;
+        padding: 14px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #fff;
+    }
+
+    .checkbox-select > div {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .checkbox-select label {
+        margin: 0;
+        font-weight: 500;
+        text-transform: none;
+        cursor: pointer;
+    }
+
+    .checkbox-select input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+        accent-color: var(--module-start);
+        cursor: pointer;
+    }
+
+    .calculated-field {
+        background: #f4f6ff;
+        color: #414fb1;
+        font-weight: 700;
+    }
+
+    .help-text {
+        margin-top: 6px;
+        color: #666;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .form-group.error .form-control {
+        border-color: #dc3545;
+    }
+
+    .error-list {
+        margin: 6px 0 0;
+        padding: 0;
+        color: #dc3545;
+        font-size: 12px;
+        list-style: none;
+    }
+
+    .radio-select {
+        display: flex;
+        gap: 18px;
+        min-height: 44px;
+        align-items: center;
+    }
+
+    .radio-select div {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .radio-select label {
+        margin: 0;
+        font-weight: 500;
+        text-transform: none;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 10px 22px;
+        border: 0;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--module-start) 0%, var(--module-end) 100%);
+        color: white;
+    }
+
+    .btn-cancel {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    .alert {
+        margin-bottom: 20px;
+        padding: 12px 15px;
+        border: 1px solid #c3e6cb;
+        border-radius: 5px;
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .alert-error {
+        border-color: #f5c6cb;
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 20px;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-header">
+        <span class="icon"></span>
+        <h1>{{ titulo }}</h1>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert{% if message.tags == 'error' %} alert-error{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-error">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% for section_title, fields in form_sections %}
+        <section class="form-section">
+            <h2 class="section-title">{{ section_title }}</h2>
+            <div class="form-grid">
+                {% for field in fields %}
+                <div class="form-group{% if field.name == 'maquinas_proceso' %} full{% endif %}{% if field.errors %} error{% endif %}"
+                     {% if field.name == 'maquina_recuperacion' %}id="maquina-recuperacion-group" hidden{% endif %}>
+                    {% if field.name == 'incluye_recuperacion' %}
+                        <span class="form-label">{{ field.label }} *</span>
+                        <div class="radio-select">{{ field }}</div>
+                    {% elif field.name == 'maquinas_proceso' %}
+                        <span class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+                        {{ field }}
+                    {% else %}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                        {{ field }}
+                    {% endif %}
+                    {% if field.help_text %}<span class="help-text">{{ field.help_text }}</span>{% endif %}
+                    {% if field.errors %}
+                    <ul class="error-list">
+                        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+
+        <div class="form-actions">
+            <a href="{{ cancel_url }}" class="btn btn-cancel">Cancelar</a>
+            <button type="submit" class="btn btn-submit">{{ texto_boton }}</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    (() => {
+        const dimensionInputs = document.querySelectorAll('.dimension-input');
+        const largo = document.getElementById('id_largo');
+        const ancho = document.getElementById('id_ancho');
+        const espesor = document.getElementById('id_espesor');
+        const cantidad = document.getElementById('id_cantidad_piezas');
+        const m3Pieza = document.querySelector('[data-calculation="piece"]');
+        const volumenTotal = document.querySelector('[data-calculation="total"]');
+        const recuperacionGroup = document.getElementById('maquina-recuperacion-group');
+        const recuperacionChoices = document.querySelectorAll('input[name="incluye_recuperacion"]');
+
+        const actualizarVolumenes = () => {
+            const valores = [largo, ancho, espesor].map((campo) => Number(campo.value));
+            const piezas = Number(cantidad.value);
+            if (valores.every((valor) => Number.isFinite(valor) && valor > 0)) {
+                const volumen = valores.reduce((total, valor) => total * valor, 1);
+                m3Pieza.value = volumen.toFixed(3);
+                volumenTotal.value = piezas > 0 ? (volumen * piezas).toFixed(3) : '0';
+            } else {
+                m3Pieza.value = '0';
+                volumenTotal.value = '0';
+            }
+        };
+
+        const actualizarRecuperacion = () => {
+            const seleccionado = document.querySelector('input[name="incluye_recuperacion"]:checked');
+            const habilitada = Boolean(seleccionado && seleccionado.value === 'True');
+            recuperacionGroup.hidden = !habilitada;
+            recuperacionGroup.querySelector('select').disabled = !habilitada;
+        };
+
+        dimensionInputs.forEach((campo) => campo.addEventListener('input', actualizarVolumenes));
+        recuperacionChoices.forEach((campo) => campo.addEventListener('change', actualizarRecuperacion));
+        actualizarVolumenes();
+        actualizarRecuperacion();
+    })();
+</script>
+{% endblock %}

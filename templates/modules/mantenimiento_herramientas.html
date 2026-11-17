@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+
+{% block title %}Herramientas - Mantenimiento{% endblock %}
+{% block page_title %}Mantenimiento · Herramientas{% endblock %}
+
+{% block content %}
+<style>
+    .tools-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+    }
+
+    .tools-header {
+        padding: 27px 30px;
+        border-radius: 17px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        box-shadow: 0 12px 28px rgba(31, 45, 61, .13);
+    }
+
+    .tools-header .tools-eyebrow {
+        margin: 0 0 7px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        opacity: .8;
+    }
+
+    .tools-header h2 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(24px, 3vw, 32px);
+        letter-spacing: -.03em;
+    }
+
+    .tools-header .tools-description {
+        max-width: 700px;
+        margin-top: 8px;
+        color: rgba(255, 255, 255, .9);
+        line-height: 1.55;
+    }
+
+    .tools-records,
+    .tool-section {
+        overflow: hidden;
+        border: 1px solid #e6ebf2;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .055);
+    }
+
+    .tools-records-heading,
+    .tool-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 17px 22px;
+        border-bottom: 1px solid #edf1f6;
+        background: linear-gradient(105deg, #f8fafc, #fff);
+    }
+
+    .tools-records-heading h3,
+    .tool-section-heading h3 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 17px;
+    }
+
+    .tools-records-heading p,
+    .tool-section-heading p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .tools-button {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 19px;
+        border: 0;
+        border-radius: 9px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start), var(--sidebar-end));
+        box-shadow: 0 7px 16px rgba(31, 45, 61, .15);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 750;
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .tools-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(31, 45, 61, .2);
+    }
+
+    .tools-button.secondary {
+        border: 1px solid #d9e1eb;
+        color: #475569;
+        background: #fff;
+        box-shadow: none;
+    }
+
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+        gap: 13px;
+        padding: 18px;
+    }
+
+    .tool-card {
+        display: grid;
+        align-content: start;
+        gap: 11px;
+        min-width: 0;
+        padding: 16px;
+        border: 1px solid #e4eaf1;
+        border-radius: 12px;
+    }
+
+    .tool-card img {
+        width: 100%;
+        height: 170px;
+        border-radius: 9px;
+        object-fit: cover;
+        background: #f1f5f9;
+    }
+
+    .tool-card-code {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .tool-card h4 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 16px;
+    }
+
+    .tool-card p,
+    .tools-empty {
+        margin: 0;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .tool-card-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+        padding-top: 11px;
+        border-top: 1px solid #edf1f6;
+    }
+
+    .tool-card-meta span {
+        display: block;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+        text-transform: uppercase;
+    }
+
+    .tool-card-meta strong {
+        display: block;
+        overflow-wrap: anywhere;
+        margin-top: 4px;
+        color: #334155;
+        font-size: 12px;
+    }
+
+    .tools-empty {
+        padding: 25px 20px;
+        text-align: center;
+    }
+
+    .tool-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .tool-section-heading {
+        justify-content: flex-start;
+    }
+
+    .tool-section-icon {
+        display: grid;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 12px;
+        background: #eef2ff;
+        font-size: 19px;
+    }
+
+    .tool-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 17px;
+        padding: 21px 22px 23px;
+    }
+
+    .tool-field {
+        min-width: 0;
+    }
+
+    .tool-field.is-wide {
+        grid-column: 1 / -1;
+    }
+
+    .tool-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .tool-required {
+        color: #dc2626;
+    }
+
+    .consumable-input,
+    .consumable-file {
+        width: 100%;
+        min-height: 43px;
+        padding: 10px 12px;
+        border: 1px solid #d8e0ea;
+        border-radius: 9px;
+        outline: none;
+        background: #fff;
+        color: #1e293b;
+        font: inherit;
+        font-size: 13px;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .consumable-input:focus,
+    .consumable-file:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, .14);
+    }
+
+    textarea.consumable-input {
+        min-height: 88px;
+        resize: vertical;
+    }
+
+    .consumable-file {
+        padding: 8px;
+        background: #fbfcfe;
+    }
+
+    .tool-help {
+        display: block;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .tool-errors,
+    .tool-error-summary {
+        color: #b91c1c;
+        font-size: 12px;
+    }
+
+    .tool-errors {
+        margin: 6px 0 0;
+        padding-left: 17px;
+    }
+
+    .tool-errors li + li {
+        margin-top: 3px;
+    }
+
+    .tool-error-summary {
+        padding: 13px 16px;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        color: #991b1b;
+        background: #fef2f2;
+        font-size: 13px;
+    }
+
+    .tools-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 3px 0 8px;
+    }
+
+    @media (max-width: 680px) {
+        .tools-header {
+            padding: 22px;
+        }
+
+        .tool-fields {
+            grid-template-columns: minmax(0, 1fr);
+            padding: 18px;
+        }
+
+        .tool-field.is-wide {
+            grid-column: auto;
+        }
+
+        .tool-section-heading {
+            padding: 15px 17px;
+        }
+
+        .tools-actions {
+            justify-content: stretch;
+        }
+
+        .tools-actions .tools-button {
+            flex: 1 1 160px;
+        }
+
+        .tools-records-heading {
+            padding: 15px 17px;
+        }
+    }
+</style>
+
+<main class="tools-shell">
+    <header class="tools-header">
+        <p class="tools-eyebrow">Mantenimiento · Inventario técnico</p>
+        <h2>Herramientas</h2>
+        <p class="tools-description">Registra las herramientas y lleva el control de su ubicación, asignación, condición y disponibilidad.</p>
+    </header>
+
+    <section class="tools-records" aria-labelledby="tools-records-title">
+        <div class="tools-records-heading">
+            <div>
+                <h3 id="tools-records-title">Herramientas registradas</h3>
+                <p>Consulta los equipos registrados o agrega una nueva herramienta.</p>
+            </div>
+            <div class="tools-actions">
+                <a class="tools-button secondary" href="{% url 'mantenimiento_prestamos_herramientas' %}">Préstamo de herramientas</a>
+                <a class="tools-button" href="{% url 'mantenimiento_herramientas' %}?registrar=1#registro-herramienta">Registrar herramienta</a>
+            </div>
+        </div>
+        {% if herramientas %}
+        <div class="tools-grid">
+            {% for herramienta in herramientas %}
+            <article class="tool-card">
+                {% if herramienta.foto %}<img src="{{ herramienta.foto.url }}" alt="Foto de {{ herramienta.nombre }}">{% endif %}
+                <span class="tool-card-code">{{ herramienta.codigo_interno }}</span>
+                <h4>{{ herramienta.nombre }}</h4>
+                <p>{{ herramienta.descripcion|default:"Sin descripción registrada"|truncatewords:18 }}</p>
+                <div class="tool-card-meta">
+                    <div><span>Estado operativo</span><strong>{{ herramienta.estado_operativo|default:"Sin registrar" }}</strong></div>
+                    <div><span>Ubicación</span><strong>{{ herramienta.ubicacion_especifica|default:"Sin registrar" }}</strong></div>
+                    <div><span>Responsable</span><strong>{{ herramienta.trabajador_responsable|default:"Sin asignar" }}</strong></div>
+                    <div><span>Disponibilidad</span><strong>{{ herramienta.disponibilidad|default:"Sin registrar" }}</strong></div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="tools-empty">Aún no hay herramientas registradas. Usa “Registrar herramienta” para agregar la primera.</p>
+        {% endif %}
+    </section>
+
+    {% if mostrar_formulario %}
+    <form id="registro-herramienta" class="tool-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="tool-error-summary" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <section class="tool-section" aria-labelledby="tool-form-title">
+            <div class="tool-section-heading">
+                <span class="tool-section-icon" aria-hidden="true">➕</span>
+                <div>
+                    <h3 id="tool-form-title">Registrar una herramienta</h3>
+                    <p>Completa la ficha para agregar una herramienta al inventario de mantenimiento.</p>
+                </div>
+            </div>
+        </section>
+        {% for seccion in secciones %}
+        <section class="tool-section" aria-labelledby="tool-section-{{ forloop.counter }}">
+            <div class="tool-section-heading">
+                <span class="tool-section-icon" aria-hidden="true">{{ seccion.icono }}</span>
+                <div>
+                    <h3 id="tool-section-{{ forloop.counter }}">{{ seccion.titulo }}</h3>
+                    {% if forloop.first %}<p>Los campos marcados con * son obligatorios.</p>{% endif %}
+                </div>
+            </div>
+            <div class="tool-fields">
+                {% for field in seccion.campos %}
+                <div class="tool-field{% if field.name == 'descripcion' or field.name == 'observaciones' %} is-wide{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="tool-required">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="tool-help">{{ field.help_text }}</small>{% endif %}
+                    {% if field.name == 'foto' %}<small class="tool-help">Imagen JPG, PNG o WEBP; máximo 5 MB.</small>{% endif %}
+                    {% if field.errors %}
+                    <ul class="tool-errors" role="alert">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+        <div class="tools-actions">
+            <a class="tools-button secondary" href="{% url 'mantenimiento_herramientas' %}">Cancelar</a>
+            <button class="tools-button" type="submit">Guardar herramienta</button>
+        </div>
+    </form>
+    {% endif %}
+</main>
+{% endblock %}

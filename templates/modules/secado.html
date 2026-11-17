@@ -1,0 +1,527 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ module }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}{{ module }}{% endblock %}
+
+{% block content %}
+<style>
+    .drying-page {
+        max-width: 1250px;
+        margin: 0 auto;
+    }
+
+    .drying-panel {
+        margin-bottom: 24px;
+        padding: 24px;
+        border: 1px solid #edf0f2;
+        border-radius: 14px;
+        background: var(--dashboard-background);
+        box-shadow: 0 4px 14px rgba(31, 45, 61, 0.05);
+    }
+
+    .drying-panel h1 {
+        margin: -24px -24px 18px;
+        padding: 18px 24px;
+        border-radius: 13px 13px 0 0;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        color: white;
+    }
+
+    .drying-intro {
+        margin: 0 0 22px;
+        color: #727d87;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .drying-fields {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .drying-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #35404a;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .drying-field .form-control {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #d9dfe3;
+        border-radius: 7px;
+        background: white;
+        color: #202a33;
+        font: inherit;
+    }
+
+    .package-search {
+        display: flex;
+        gap: 10px;
+        max-width: 640px;
+        margin-bottom: 12px;
+    }
+
+    .package-search .form-control {
+        flex: 1;
+        min-width: 0;
+        text-transform: uppercase;
+    }
+
+    .drying-button {
+        min-height: 42px;
+        padding: 9px 16px;
+        border: 0;
+        border-radius: 7px;
+        background: #27814f;
+        color: white;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .drying-button:hover {
+        background: #1e6840;
+    }
+
+    .drying-button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+    }
+
+    .search-message {
+        min-height: 21px;
+        margin: 0 0 12px;
+        color: #53616c;
+        font-size: 13px;
+    }
+
+    .search-message.error,
+    .form-errors {
+        color: #b42318;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+        margin-bottom: 22px;
+    }
+
+    .package-table,
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .package-table th,
+    .package-table td,
+    .history-table th,
+    .history-table td {
+        padding: 11px 10px;
+        border-bottom: 1px solid #edf0f2;
+        color: #35404a;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .package-table th,
+    .history-table th {
+        background: #f7f9f8;
+        color: #59656f;
+        font-size: 11px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .package-table input {
+        width: 100px;
+        min-height: 36px;
+        padding: 6px 8px;
+        border: 1px solid #d9dfe3;
+        border-radius: 6px;
+        font: inherit;
+    }
+
+    .remove-package {
+        border: 0;
+        background: transparent;
+        color: #a33a32;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .empty-packages {
+        padding: 20px 10px;
+        color: #7b8790;
+        text-align: center;
+    }
+
+    .drying-summary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        max-width: 650px;
+        margin: 0 0 22px;
+    }
+
+    .drying-summary label {
+        display: block;
+        margin-bottom: 7px;
+        color: #35404a;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .drying-summary input {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #d9dfe3;
+        border-radius: 7px;
+        background: #f7f9f8;
+        color: #35404a;
+        font: inherit;
+    }
+
+    .form-errors {
+        margin: 0 0 16px;
+        padding-left: 20px;
+        font-size: 13px;
+    }
+
+    .package-dialog {
+        width: min(420px, calc(100% - 32px));
+        margin: auto;
+        padding: 28px;
+        border: 0;
+        border-radius: 16px;
+        color: #202a33;
+        text-align: center;
+        box-shadow: 0 18px 60px rgba(22, 35, 28, 0.25);
+    }
+
+    .package-dialog::backdrop {
+        background: rgba(18, 29, 23, 0.55);
+        backdrop-filter: blur(3px);
+    }
+
+    .package-dialog h2 {
+        margin: 0 0 10px;
+        color: #a33a32;
+        font-size: 20px;
+    }
+
+    .package-dialog p {
+        margin: 0 0 20px;
+        color: #59656f;
+        line-height: 1.5;
+    }
+
+    .package-dialog button {
+        min-width: 100px;
+    }
+
+    @media (max-width: 750px) {
+        .drying-fields {
+            grid-template-columns: 1fr;
+        }
+
+        .drying-panel {
+            padding: 18px;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .package-search {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .drying-summary {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<main class="drying-page">
+    <section class="drying-panel" aria-labelledby="drying-title">
+        <h1 id="drying-title">{% if is_edit %}Completar registro de secado{% else %}Registro de secado{% endif %}</h1>
+        <p class="drying-intro">{% if is_edit %}Complete o corrija el CH final y agregue otros paquetes de aserrío a esta carga.{% else %}Ingrese el código de cada paquete de aserrío para agregarlo a esta carga de secado.{% endif %}</p>
+
+        <form method="post" id="drying-form" data-search-url="{{ busqueda_url }}">
+            {% csrf_token %}
+            {{ form.paquetes_json }}
+            {% if form.non_field_errors or form.paquetes_json.errors %}
+            <ul class="form-errors" role="alert">
+                {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                {% for error in form.paquetes_json.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="drying-fields">
+                <div class="drying-field">
+                    <label for="{{ form.fecha_inicio.id_for_label }}">{{ form.fecha_inicio.label }}</label>
+                    {{ form.fecha_inicio }}
+                    {% for error in form.fecha_inicio.errors %}<small class="form-errors">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="drying-field">
+                    <label for="{{ form.fecha_fin.id_for_label }}">{{ form.fecha_fin.label }}</label>
+                    {{ form.fecha_fin }}
+                    {% for error in form.fecha_fin.errors %}<small class="form-errors">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="drying-field">
+                    <label for="{{ form.turno.id_for_label }}">{{ form.turno.label }}</label>
+                    {{ form.turno }}
+                    {% for error in form.turno.errors %}<small class="form-errors">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="drying-field">
+                    <label for="{{ form.nombre_supervisor.id_for_label }}">{{ form.nombre_supervisor.label }}</label>
+                    {{ form.nombre_supervisor }}
+                    {% for error in form.nombre_supervisor.errors %}<small class="form-errors">{{ error }}</small>{% endfor %}
+                </div>
+            </div>
+
+            <label class="drying-field" for="package-code">Código ID del paquete</label>
+            <div class="package-search">
+                <input class="form-control" id="package-code" type="text" maxlength="32"
+                    autocomplete="off" placeholder="Ejemplo: ASR-20261015-0001">
+                <button class="drying-button" id="add-package" type="button">Agregar paquete</button>
+            </div>
+            <p class="search-message" id="search-message" role="status" aria-live="polite"></p>
+
+            <div class="table-scroll">
+                <table class="package-table">
+                    <thead>
+                        <tr>
+                            <th>Código ID</th>
+                            <th>Largo (m)</th>
+                            <th>Ancho (m)</th>
+                            <th>Espesor (m)</th>
+                            <th>Cantidad de piezas</th>
+                            <th>Volumen total (m³)</th>
+                            <th>CH estimado (%)</th>
+                            <th>CH final (%)</th>
+                            <th><span class="visually-hidden">Acción</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="package-rows">
+                        {% for item in paquetes_iniciales %}
+                        <tr data-package-id="{{ item.paquete.pk }}" data-estimated-ch="{{ item.paquete.ch_estimado }}" data-existing-package="true">
+                            <td class="package-code">{{ item.paquete.codigo_paquete }}</td>
+                            <td>{{ item.paquete.largo|floatformat:"3u" }}</td>
+                            <td>{{ item.paquete.ancho|floatformat:"3u" }}</td>
+                            <td>{{ item.paquete.espesor|floatformat:"3u" }}</td>
+                            <td>{{ item.paquete.cantidad_piezas }}</td>
+                            <td>{{ item.paquete.volumen_total|floatformat:"3u" }}</td>
+                            <td>{{ item.paquete.ch_estimado }}%</td>
+                            <td><input class="final-moisture" type="number" min="0" step="0.01"
+                                value="{{ item.ch_final }}" aria-label="CH final de {{ item.paquete.codigo_paquete }}"></td>
+                            <td></td>
+                        </tr>
+                        {% empty %}
+                        <tr class="empty-row"><td class="empty-packages" colspan="9">Todavía no se han agregado paquetes.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="drying-summary">
+                <div>
+                    <label for="estimated-average">Promedio CH estimado (%)</label>
+                    <input id="estimated-average" type="text" readonly>
+                </div>
+                <div>
+                    <label for="final-average">Promedio CH final (%)</label>
+                    <input id="final-average" type="text" readonly>
+                </div>
+            </div>
+
+            <button class="drying-button" type="submit">{% if is_edit %}Actualizar registro de secado{% else %}Guardar registro de secado{% endif %}</button>
+            {% if is_edit %}<a href="{% url 'secado' %}">Cancelar</a>{% endif %}
+        </form>
+    </section>
+
+    <dialog class="package-dialog" id="package-dialog" aria-labelledby="package-dialog-title">
+        <h2 id="package-dialog-title">No se puede agregar el paquete</h2>
+        <p id="package-dialog-message">{% for error in form.paquetes_json.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
+        <button class="drying-button" id="close-package-dialog" type="button">Entendido</button>
+    </dialog>
+
+</main>
+
+<script>
+    (() => {
+        const form = document.getElementById('drying-form');
+        const packageInput = document.getElementById('package-code');
+        const addButton = document.getElementById('add-package');
+        const message = document.getElementById('search-message');
+        const rows = document.getElementById('package-rows');
+        const packageData = document.getElementById('id_paquetes_json');
+        const estimatedAverage = document.getElementById('estimated-average');
+        const finalAverage = document.getElementById('final-average');
+        const startDate = document.getElementById('id_fecha_inicio');
+        const packageDialog = document.getElementById('package-dialog');
+        const packageDialogMessage = document.getElementById('package-dialog-message');
+        const closePackageDialog = document.getElementById('close-package-dialog');
+
+        const showPackageDialog = text => {
+            packageDialogMessage.textContent = text;
+            packageDialog.showModal();
+            closePackageDialog.focus();
+        };
+
+        const updateSummary = () => {
+            const packageRows = [...rows.querySelectorAll('tr[data-package-id]')];
+            const estimatedValues = packageRows.map(row => Number(row.dataset.estimatedCh));
+            const finalValues = packageRows
+                .map(row => row.querySelector('.final-moisture').value.trim())
+                .filter(value => value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0)
+                .map(Number);
+            estimatedAverage.value = estimatedValues.length
+                ? (estimatedValues.reduce((sum, value) => sum + value, 0) / estimatedValues.length).toFixed(2)
+                : '';
+            finalAverage.value = finalValues.length
+                ? (finalValues.reduce((sum, value) => sum + value, 0) / finalValues.length).toFixed(2)
+                : '';
+            packageData.value = JSON.stringify(packageRows.map(row => ({
+                id: Number(row.dataset.packageId),
+                ch_final: row.querySelector('.final-moisture').value.trim(),
+            })));
+        };
+
+        const removeEmptyMessage = () => {
+            const emptyRow = rows.querySelector('.empty-row');
+            if (emptyRow) emptyRow.remove();
+        };
+
+        const createCell = (row, value) => {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+        };
+
+        const addPackageRow = data => {
+            removeEmptyMessage();
+            const row = document.createElement('tr');
+            row.dataset.packageId = data.id;
+            row.dataset.estimatedCh = data.ch_estimado;
+            createCell(row, data.codigo);
+            createCell(row, data.largo);
+            createCell(row, data.ancho);
+            createCell(row, data.espesor);
+            createCell(row, data.cantidad_piezas);
+            createCell(row, data.volumen_total);
+            createCell(row, `${data.ch_estimado}%`);
+
+            const finalCell = document.createElement('td');
+            const finalInput = document.createElement('input');
+            finalInput.className = 'final-moisture';
+            finalInput.type = 'number';
+            finalInput.min = '0';
+            finalInput.step = '0.01';
+            finalInput.setAttribute('aria-label', `CH final de ${data.codigo}`);
+            finalCell.appendChild(finalInput);
+            row.appendChild(finalCell);
+
+            const actionCell = document.createElement('td');
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-package';
+            removeButton.type = 'button';
+            removeButton.textContent = 'Quitar';
+            removeButton.setAttribute('aria-label', `Quitar ${data.codigo}`);
+            actionCell.appendChild(removeButton);
+            row.appendChild(actionCell);
+            rows.appendChild(row);
+            updateSummary();
+        };
+
+        const searchPackage = async () => {
+            const code = packageInput.value.trim().toUpperCase();
+            if (!code) {
+                const text = 'Ingrese el código ID del paquete para buscarlo en el módulo de aserrío.';
+                message.textContent = text;
+                message.classList.add('error');
+                showPackageDialog(text);
+                packageInput.focus();
+                return;
+            }
+            if (!startDate.value) {
+                const text = 'Seleccione la fecha inicial del secado antes de agregar un paquete.';
+                message.textContent = text;
+                message.classList.add('error');
+                showPackageDialog(text);
+                startDate.focus();
+                return;
+            }
+            if ([...rows.querySelectorAll('.package-code')].some(cell => cell.textContent === code)) {
+                const text = 'Ese paquete ya está agregado a la lista actual.';
+                message.textContent = text;
+                message.classList.add('error');
+                showPackageDialog(text);
+                return;
+            }
+
+            addButton.disabled = true;
+            message.classList.remove('error');
+            message.textContent = 'Buscando paquete…';
+            try {
+                const url = new URL(form.dataset.searchUrl, window.location.origin);
+                url.searchParams.set('codigo_paquete', code);
+                url.searchParams.set('fecha_inicio', startDate.value);
+                const response = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'No se pudo buscar el paquete.');
+                addPackageRow(data);
+                packageInput.value = '';
+                message.textContent = `${data.codigo} agregado al proceso.`;
+                packageInput.focus();
+            } catch (error) {
+                message.textContent = error.message;
+                message.classList.add('error');
+                showPackageDialog(error.message || 'No se pudo encontrar el paquete.');
+            } finally {
+                addButton.disabled = false;
+            }
+        };
+
+        if (addButton && packageInput) {
+            addButton.addEventListener('click', searchPackage);
+            packageInput.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchPackage();
+                }
+            });
+        }
+        closePackageDialog.addEventListener('click', () => packageDialog.close());
+        packageDialog.addEventListener('close', () => packageInput.focus());
+        if (packageDialogMessage.textContent.trim()) {
+            packageDialog.showModal();
+            closePackageDialog.focus();
+        }
+        rows.addEventListener('input', event => {
+            if (event.target.matches('.final-moisture')) updateSummary();
+        });
+        rows.addEventListener('click', event => {
+            const button = event.target.closest('.remove-package');
+            if (!button || button.closest('tr').dataset.existingPackage === 'true') return;
+            button.closest('tr').remove();
+            if (!rows.querySelector('tr[data-package-id]')) {
+                const row = document.createElement('tr');
+                row.className = 'empty-row';
+                row.innerHTML = '<td class="empty-packages" colspan="9">Todavía no se han agregado paquetes.</td>';
+                rows.appendChild(row);
+            }
+            updateSummary();
+        });
+        form.addEventListener('submit', updateSummary);
+        updateSummary();
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Secado {{ registro.pk }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}Detalle del proceso de secado {{ registro.pk }}{% endblock %}
+
+{% block content %}
+<style>
+    .drying-detail {
+        max-width: 1250px;
+        margin: 0 auto;
+    }
+
+    .detail-header,
+    .detail-summary,
+    .detail-packages {
+        margin-bottom: 22px;
+        padding: 24px;
+        border: 1px solid #edf0f2;
+        border-radius: 14px;
+        background: white;
+        box-shadow: 0 4px 14px rgba(31, 45, 61, 0.05);
+    }
+
+    .detail-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+    }
+
+    .detail-header h1,
+    .detail-packages h2 {
+        margin: 0 0 8px;
+        color: #202a33;
+    }
+
+    .detail-header p {
+        margin: 0;
+        color: #727d87;
+    }
+
+    .detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .detail-actions a {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 7px;
+        background: #27814f;
+        color: white;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .detail-actions a.secondary {
+        border: 1px solid #d9dfe3;
+        background: white;
+        color: #35404a;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .summary-item {
+        padding: 14px;
+        border-radius: 9px;
+        background: #f7f9f8;
+    }
+
+    .summary-item dt {
+        margin-bottom: 7px;
+        color: #727d87;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .summary-item dd {
+        margin: 0;
+        color: #202a33;
+        font-size: 16px;
+        font-weight: 650;
+    }
+
+    .detail-packages h2 {
+        font-size: 19px;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+    }
+
+    .package-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .package-table th,
+    .package-table td {
+        padding: 11px 10px;
+        border-bottom: 1px solid #edf0f2;
+        color: #35404a;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .package-table th {
+        background: #f7f9f8;
+        color: #59656f;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 700px) {
+        .detail-header {
+            flex-direction: column;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .detail-header,
+        .detail-summary,
+        .detail-packages {
+            padding: 18px;
+        }
+    }
+
+    @media (max-width: 450px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<main class="drying-detail">
+    <header class="detail-header">
+        <div>
+            <h1>Proceso de secado #{{ registro.pk }}</h1>
+            <p>Detalle de la información registrada para este proceso.</p>
+        </div>
+        <nav class="detail-actions" aria-label="Acciones del proceso">
+            <a href="{% url 'secado_editar' registro_id=registro.pk %}">Completar / editar datos</a>
+            <a class="secondary" href="{% url 'secado' %}">Volver a Secado</a>
+        </nav>
+    </header>
+
+    <section class="detail-summary" aria-label="Resumen del proceso">
+        <dl class="summary-grid">
+            <div class="summary-item">
+                <dt>ID de secado</dt>
+                <dd>{{ registro.pk }}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>Fecha de inicio</dt>
+                <dd>{{ registro.fecha_inicio|date:"d/m/Y" }}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>Fecha final</dt>
+                <dd>{% if registro.fecha_fin %}{{ registro.fecha_fin|date:"d/m/Y" }}{% else %}En proceso{% endif %}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>CH final promedio</dt>
+                <dd>{% if promedio_final != None %}{{ promedio_final|floatformat:2 }}%{% else %}Pendiente{% endif %}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>CH estimado promedio</dt>
+                <dd>{% if promedio_estimado != None %}{{ promedio_estimado|floatformat:2 }}%{% else %}—{% endif %}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>Volumen total</dt>
+                <dd>{% if volumen_total != None %}{{ volumen_total|floatformat:"3u" }} m³{% else %}0.000 m³{% endif %}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>Especie(s)</dt>
+                <dd>{{ especies|default:"—" }}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>Turno de secado</dt>
+                <dd>{{ registro.get_turno_display }}</dd>
+            </div>
+            <div class="summary-item">
+                <dt>Supervisor / responsable</dt>
+                <dd>{{ registro.nombre_supervisor }}</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="detail-packages" aria-labelledby="packages-title">
+        <h2 id="packages-title">Paquetes del proceso</h2>
+        <div class="table-scroll">
+            <table class="package-table">
+                <thead>
+                    <tr>
+                        <th>Código ID</th>
+                        <th>Especie</th>
+                        <th>Largo (m)</th>
+                        <th>Ancho (m)</th>
+                        <th>Espesor (m)</th>
+                        <th>Cantidad de piezas</th>
+                        <th>Volumen total (m³)</th>
+                        <th>CH estimado (%)</th>
+                        <th>CH final (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in paquetes %}
+                    <tr>
+                        <td>{{ item.paquete.codigo_paquete }}</td>
+                        <td>{{ item.paquete.get_especie_madera_display }}</td>
+                        <td>{{ item.paquete.largo|floatformat:"3u" }}</td>
+                        <td>{{ item.paquete.ancho|floatformat:"3u" }}</td>
+                        <td>{{ item.paquete.espesor|floatformat:"3u" }}</td>
+                        <td>{{ item.paquete.cantidad_piezas }}</td>
+                        <td>{{ item.paquete.volumen_total|floatformat:"3u" }}</td>
+                        <td>{{ item.paquete.ch_estimado }}%</td>
+                        <td>{% if item.ch_final != None %}{{ item.ch_final|floatformat:2 }}%{% else %}Pendiente{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9">Este proceso no tiene paquetes registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+{% endblock %}

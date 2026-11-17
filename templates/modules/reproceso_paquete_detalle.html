@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ paquete.codigo_paquete }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}Detalle del paquete{% endblock %}
+
+{% block content %}
+<style>
+    .package-card {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .package-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 25px;
+        padding-bottom: 18px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .package-header h1 {
+        margin: 0;
+        color: #333;
+        font-size: 24px;
+    }
+
+    .package-code {
+        margin: 8px 0 0;
+        color: #3b7dd8;
+        font-weight: 700;
+    }
+
+    .barcode-panel {
+        margin-bottom: 28px;
+        padding: 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .barcode-panel h2 {
+        margin: 0 0 12px;
+        color: #333;
+        font-size: 16px;
+    }
+
+    .barcode-panel svg {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .package-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 14px;
+    }
+
+    .detail-item {
+        padding: 13px;
+        border-radius: 6px;
+        background: #f7f8fc;
+        overflow-wrap: anywhere;
+    }
+
+    .detail-label {
+        display: block;
+        margin-bottom: 5px;
+        color: #666;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .detail-value {
+        color: #222;
+        font-size: 15px;
+    }
+
+    .package-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .package-actions a {
+        display: inline-flex;
+        min-height: 42px;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 18px;
+        border-radius: 5px;
+        background: #667eea;
+        color: white;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .package-actions .secondary {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    @media (max-width: 600px) {
+        .package-card {
+            padding: 20px;
+        }
+
+        .package-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .package-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<main class="package-card">
+    <header class="package-header">
+        <div>
+            <h1>Paquete de reproceso</h1>
+            <p class="package-code">{{ paquete.codigo_paquete }}</p>
+        </div>
+    </header>
+
+    <section class="barcode-panel" aria-labelledby="barcode-title">
+        <h2 id="barcode-title">Código de barras del paquete</h2>
+        {{ barcode_svg }}
+    </section>
+
+    <section class="package-details" aria-label="Datos del paquete">
+        <div class="detail-item"><span class="detail-label">Fecha</span><span class="detail-value">{{ paquete.fecha|date:"d/m/Y" }}</span></div>
+        <div class="detail-item"><span class="detail-label">Tipo de producto</span><span class="detail-value">{{ paquete.get_tipo_producto_display }}</span></div>
+        <div class="detail-item"><span class="detail-label">Código del paquete</span><span class="detail-value">{{ paquete.codigo_paquete }}</span></div>
+        <div class="detail-item"><span class="detail-label">Producción del día</span><span class="detail-value">{{ paquete.consecutivo_diario }}</span></div>
+        <div class="detail-item"><span class="detail-label">Paquete de origen</span><span class="detail-value">{{ registro.paquete_origen.codigo_paquete }}</span></div>
+        <div class="detail-item"><span class="detail-label">Supervisor</span><span class="detail-value">{{ registro.nombre_supervisor }}</span></div>
+        <div class="detail-item"><span class="detail-label">Máquinas</span><span class="detail-value">{{ registro.maquinas_proceso|join:", " }}</span></div>
+        <div class="detail-item"><span class="detail-label">Largo (m)</span><span class="detail-value">{{ paquete.largo|floatformat:"3u" }}</span></div>
+        <div class="detail-item"><span class="detail-label">Ancho (m)</span><span class="detail-value">{{ paquete.ancho|floatformat:"3u" }}</span></div>
+        <div class="detail-item"><span class="detail-label">Espesor (m)</span><span class="detail-value">{{ paquete.espesor|floatformat:"3u" }}</span></div>
+        <div class="detail-item"><span class="detail-label">Piezas</span><span class="detail-value">{{ paquete.cantidad_piezas }}</span></div>
+        <div class="detail-item"><span class="detail-label">Volumen total (m³)</span><span class="detail-value">{{ paquete.volumen_total|floatformat:"3u" }}</span></div>
+        <div class="detail-item"><span class="detail-label">m³ por pieza</span><span class="detail-value">{{ paquete.m3_pieza|floatformat:"3u" }}</span></div>
+        <div class="detail-item"><span class="detail-label">Calidad visual</span><span class="detail-value">{{ paquete.get_calidad_visual_display }}</span></div>
+        <div class="detail-item"><span class="detail-label">Fecha de registro</span><span class="detail-value">{{ registro.fecha_registro|date:"d/m/Y H:i" }}</span></div>
+    </section>
+
+    <nav class="package-actions" aria-label="Acciones del paquete">
+        <a class="secondary" href="{% url 'reproceso' %}">Volver a reproceso</a>
+        <a href="{% url 'reproceso_paquete_editar' paquete.pk %}">Editar paquete</a>
+    </nav>
+</main>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ module }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}{{ module }}{% endblock %}
+
+{% block content %}
+<style>
+    .admin-landing {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .admin-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px 26px;
+        border-radius: 14px;
+        color: white;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        box-shadow: 0 12px 28px rgba(79, 70, 229, 0.18);
+    }
+
+    .admin-header h3 {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 34px);
+        letter-spacing: -0.03em;
+    }
+
+    .admin-header p {
+        margin: 6px 0 0;
+        opacity: 0.9;
+    }
+
+    .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+    }
+
+    .admin-tile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 118px;
+        padding: 18px 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: white;
+        color: #1e293b;
+        font-size: 15px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+    }
+
+    .admin-tile:hover {
+        transform: translateY(-2px);
+        border-color: rgba(79, 70, 229, 0.3);
+        box-shadow: 0 14px 26px rgba(79, 70, 229, 0.12);
+    }
+
+    .admin-tile:focus-visible {
+        outline: 3px solid rgba(79, 70, 229, 0.25);
+        outline-offset: 2px;
+    }
+
+    .admin-panel-shell {
+        display: none;
+        min-height: 260px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: white;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+    }
+
+    .admin-panel-shell.active {
+        display: block;
+    }
+
+    .admin-panel-placeholder {
+        display: grid;
+        place-items: center;
+        min-height: 210px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8fafc, #eef2ff);
+        color: #64748b;
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    @media (max-width: 640px) {
+        .admin-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="admin-landing">
+    <section class="admin-header">
+        <div>
+            <h3>Administración</h3>
+            <p>Selecciona un área para continuar.</p>
+        </div>
+    </section>
+
+    <section class="admin-grid" aria-label="Menú administrativo">
+        <button type="button" class="admin-tile" data-target="rrhh">🏢 Nomina y RRHH</button>
+        <button type="button" class="admin-tile" data-target="forestal">🌲 Abastecimiento Forestal</button>
+        <button type="button" class="admin-tile" data-target="industrial">🏭 Producción Industrial</button>
+        <button type="button" class="admin-tile" data-target="mantenimiento">🔧 Mantenimiento</button>
+        <button type="button" class="admin-tile" data-target="inventario">📦 Inventario y Almacén</button>
+        <button type="button" class="admin-tile" data-target="logistica">🚚 Logística y Transporte</button>
+        <button type="button" class="admin-tile" data-target="compras">🛒 Compras y Ventas</button>
+        <button type="button" class="admin-tile" data-target="servicios">💼 Servicios</button>
+        <button type="button" class="admin-tile" data-target="clientes">👥 Clientes</button>
+        <button type="button" class="admin-tile" data-target="exportaciones">🌍 Exportaciones</button>
+    </section>
+
+    <section class="admin-panel-shell active" id="panel-rrhh" aria-live="polite">
+        <div class="admin-panel-placeholder">Nomina y RRHH</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-forestal" aria-live="polite">
+        <div class="admin-panel-placeholder">Abastecimiento Forestal</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-industrial" aria-live="polite">
+        <div class="admin-panel-placeholder">Producción Industrial</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-mantenimiento" aria-live="polite">
+        <div class="admin-panel-placeholder">Mantenimiento</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-inventario" aria-live="polite">
+        <div class="admin-panel-placeholder">Inventario y Almacén</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-logistica" aria-live="polite">
+        <div class="admin-panel-placeholder">Logística y Transporte</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-compras" aria-live="polite">
+        <div class="admin-panel-placeholder">Compras y Ventas</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-servicios" aria-live="polite">
+        <div class="admin-panel-placeholder">Servicios</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-clientes" aria-live="polite">
+        <div class="admin-panel-placeholder">Clientes</div>
+    </section>
+
+    <section class="admin-panel-shell" id="panel-exportaciones" aria-live="polite">
+        <div class="admin-panel-placeholder">Exportaciones</div>
+    </section>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tiles = document.querySelectorAll('.admin-tile');
+        const panels = document.querySelectorAll('.admin-panel-shell');
+
+        tiles.forEach((tile) => {
+            tile.addEventListener('click', function () {
+                const targetId = 'panel-' + this.dataset.target;
+
+                panels.forEach((panel) => {
+                    panel.classList.toggle('active', panel.id === targetId);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,541 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if editing %}Editar consumible{% else %}Consumibles{% endif %} - Mantenimiento{% endblock %}
+
+{% block page_title %}{% if editing %}Mantenimiento · Editar consumible{% else %}Mantenimiento · Consumibles{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+    .consumables-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+    }
+
+    .consumables-header {
+        padding: 27px 30px;
+        border-radius: 17px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        box-shadow: 0 12px 28px rgba(31, 45, 61, .13);
+    }
+
+    .consumables-eyebrow {
+        margin: 0 0 7px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        opacity: .8;
+    }
+
+    .consumables-header h2 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(24px, 3vw, 32px);
+        letter-spacing: -.03em;
+    }
+
+    .consumables-header p {
+        max-width: 700px;
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, .9);
+        line-height: 1.55;
+    }
+
+    .consumables-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .consumable-section {
+        overflow: hidden;
+        border: 1px solid #e6ebf2;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .055);
+    }
+
+    .consumable-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 17px 22px;
+        border-bottom: 1px solid #edf1f6;
+        background: linear-gradient(105deg, #f8fafc, #fff);
+    }
+
+    .consumable-section-icon {
+        display: grid;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 12px;
+        background: #eef2ff;
+        font-size: 19px;
+    }
+
+    .consumable-section-heading h3 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 17px;
+    }
+
+    .consumable-section-heading p {
+        margin: 3px 0 0;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .consumable-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 17px;
+        padding: 21px 22px 23px;
+    }
+
+    .consumable-field {
+        min-width: 0;
+    }
+
+    .consumable-field.is-wide {
+        grid-column: 1 / -1;
+    }
+
+    .consumable-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .consumable-required {
+        color: #dc2626;
+    }
+
+    .consumable-input,
+    .consumable-file {
+        width: 100%;
+        min-height: 43px;
+        padding: 10px 12px;
+        border: 1px solid #d8e0ea;
+        border-radius: 9px;
+        outline: none;
+        background: #fff;
+        color: #1e293b;
+        font: inherit;
+        font-size: 13px;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .consumable-input:focus,
+    .consumable-file:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, .14);
+    }
+
+    textarea.consumable-input {
+        min-height: 88px;
+        resize: vertical;
+    }
+
+    .consumable-file {
+        padding: 8px;
+        background: #fbfcfe;
+    }
+
+    .consumable-help {
+        display: block;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .consumable-errors {
+        margin: 6px 0 0;
+        padding-left: 17px;
+        color: #b91c1c;
+        font-size: 12px;
+    }
+
+    .consumable-errors li + li {
+        margin-top: 3px;
+    }
+
+    .consumables-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 3px 0 8px;
+    }
+
+    .consumables-button {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 19px;
+        border: 0;
+        border-radius: 9px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start), var(--sidebar-end));
+        box-shadow: 0 7px 16px rgba(31, 45, 61, .15);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 750;
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .consumables-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(31, 45, 61, .2);
+    }
+
+    .consumables-button.secondary {
+        border: 1px solid #d9e1eb;
+        color: #475569;
+        background: #fff;
+        box-shadow: none;
+    }
+
+    .consumables-error-summary {
+        padding: 13px 16px;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        color: #991b1b;
+        background: #fef2f2;
+        font-size: 13px;
+    }
+
+    .consumable-records {
+        overflow: hidden;
+        border: 1px solid #e6ebf2;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .055);
+    }
+
+    .consumable-records-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 22px;
+        border-bottom: 1px solid #edf1f6;
+        background: #f8fafc;
+    }
+
+    .consumable-records-heading h3 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 17px;
+    }
+
+    .consumable-records-heading p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .consumable-records-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+        gap: 13px;
+        padding: 18px;
+    }
+
+    .consumable-record-card {
+        display: grid;
+        gap: 11px;
+        min-width: 0;
+        padding: 16px;
+        border: 1px solid #e4eaf1;
+        border-radius: 12px;
+        color: inherit;
+        background: #fff;
+        text-decoration: none;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .consumable-record-card:hover {
+        transform: translateY(-2px);
+        border-color: #a5b4fc;
+        box-shadow: 0 10px 20px rgba(79, 70, 229, .1);
+    }
+
+    .consumable-record-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .consumable-record-code {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .consumable-status {
+        flex: 0 0 auto;
+        padding: 4px 9px;
+        border-radius: 20px;
+        color: #64748b;
+        background: #f1f5f9;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .consumable-status.is-active {
+        color: #047857;
+        background: #d1fae5;
+    }
+
+    .consumable-status.is-inactive {
+        color: #9a3412;
+        background: #ffedd5;
+    }
+
+    .consumable-record-card h4 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 16px;
+    }
+
+    .consumable-record-link {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .consumable-record-link:hover,
+    .consumable-record-link:focus-visible {
+        color: #4338ca;
+        text-decoration: underline;
+    }
+
+    .consumable-record-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 11px;
+        border-top: 1px solid #edf1f6;
+    }
+
+    .consumables-button.record-action {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 11px;
+        box-shadow: none;
+    }
+
+    .consumables-button.danger {
+        background: #b91c1c;
+    }
+
+    .consumable-record-actions form {
+        margin: 0;
+    }
+
+    .consumable-record-description {
+        min-height: 36px;
+        margin: 0;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .consumable-record-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+        padding-top: 11px;
+        border-top: 1px solid #edf1f6;
+    }
+
+    .consumable-record-meta span {
+        display: block;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+        text-transform: uppercase;
+    }
+
+    .consumable-record-meta strong {
+        display: block;
+        overflow-wrap: anywhere;
+        margin-top: 4px;
+        color: #334155;
+        font-size: 12px;
+    }
+
+    .consumable-record-empty {
+        margin: 0;
+        padding: 25px 20px;
+        color: #64748b;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    @media (max-width: 680px) {
+        .consumables-header {
+            padding: 22px;
+        }
+
+        .consumable-fields {
+            grid-template-columns: minmax(0, 1fr);
+            padding: 18px;
+        }
+
+        .consumable-field.is-wide {
+            grid-column: auto;
+        }
+
+        .consumable-section-heading {
+            padding: 15px 17px;
+        }
+
+        .consumables-actions {
+            justify-content: stretch;
+        }
+
+        .consumables-actions .consumables-button {
+            flex: 1 1 160px;
+        }
+    }
+</style>
+
+<main class="consumables-shell">
+    <header class="consumables-header">
+        <p class="consumables-eyebrow">Mantenimiento · Inventario técnico</p>
+        <h2>Consumibles</h2>
+        {% if editing %}
+        <p>Actualiza la información registrada de este producto del inventario de mantenimiento.</p>
+        {% else %}
+        <p>Consulta los productos registrados o completa la ficha para agregar uno nuevo al inventario de mantenimiento.</p>
+        {% endif %}
+    </header>
+
+    {% if not editing %}
+    <section class="consumable-records" aria-labelledby="consumable-records-title">
+        <div class="consumable-records-heading">
+            <div>
+                <h3 id="consumable-records-title">Consumibles registrados</h3>
+                <p>Selecciona un producto para consultar su ficha completa.</p>
+            </div>
+            <a class="consumables-button" href="#nuevo-consumible">Identificación del consumible</a>
+        </div>
+        {% if consumibles %}
+        <div class="consumable-records-grid">
+            {% for consumible in consumibles %}
+            <article class="consumable-record-card">
+                <div class="consumable-record-topline">
+                    <span class="consumable-record-code">{{ consumible.codigo_interno }}</span>
+                    <span class="consumable-status{% if consumible.estado == 'activo' %} is-active{% elif consumible.estado == 'inactivo' %} is-inactive{% endif %}">
+                        {% if consumible.estado %}{{ consumible.get_estado_display }}{% else %}Sin estado{% endif %}
+                    </span>
+                </div>
+                <h4><a class="consumable-record-link" href="{% url 'mantenimiento_consumible_detalle' consumible.id %}">{{ consumible.nombre }}</a></h4>
+                <p class="consumable-record-description">{{ consumible.descripcion|default:"Sin descripción registrada"|truncatewords:18 }}</p>
+                <div class="consumable-record-meta">
+                    <div>
+                        <span>Stock disponible</span>
+                        <strong>{{ consumible.stock_disponible|default_if_none:"Sin registrar" }}{% if consumible.stock_disponible != None and consumible.unidad_medida %} {{ consumible.unidad_medida }}{% endif %}</strong>
+                    </div>
+                    <div>
+                        <span>Ubicación</span>
+                        <strong>{{ consumible.ubicacion|default:"Sin registrar" }}</strong>
+                    </div>
+                </div>
+                <div class="consumable-record-actions" aria-label="Acciones para {{ consumible.nombre }}">
+                    <a class="consumables-button record-action" href="{% url 'mantenimiento_consumible_detalle' consumible.id %}">Ver ficha</a>
+                    <a class="consumables-button record-action" href="{% url 'mantenimiento_consumible_editar' consumible.id %}">Editar</a>
+                    <form method="post" action="{% url 'mantenimiento_consumible_eliminar' consumible.id %}" onsubmit="return confirm('¿Estás seguro de eliminar este consumible?');">
+                        {% csrf_token %}
+                        <button class="consumables-button record-action danger" type="submit">Eliminar</button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="consumable-record-empty">Aún no hay consumibles registrados. Completa la ficha para agregar el primero.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    <form id="{{ form_id }}" class="consumables-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <section class="consumable-section" aria-labelledby="new-consumable-title">
+            <div class="consumable-section-heading">
+                <span class="consumable-section-icon" aria-hidden="true">{% if editing %}✏️{% else %}➕{% endif %}</span>
+                <div>
+                    <h3 id="new-consumable-title">{{ form_title }}</h3>
+                    <p>{{ form_description }}</p>
+                </div>
+            </div>
+        </section>
+
+        {% if form.non_field_errors %}
+        <div class="consumables-error-summary" role="alert">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        {% for seccion in secciones %}
+        <section class="consumable-section"{% if forloop.first %} aria-label="{{ seccion.titulo }}"{% else %} aria-labelledby="section-{{ forloop.counter }}"{% endif %}>
+            {% if not forloop.first %}
+            <div class="consumable-section-heading">
+                <span class="consumable-section-icon" aria-hidden="true">{{ seccion.icono }}</span>
+                <div>
+                    <h3 id="section-{{ forloop.counter }}">{{ seccion.titulo }}</h3>
+                </div>
+            </div>
+            {% endif %}
+            <div class="consumable-fields">
+                {% if forloop.first %}
+                <p class="consumable-help is-wide">Los campos marcados con * son obligatorios.</p>
+                {% endif %}
+                {% for field in seccion.campos %}
+                <div class="consumable-field{% if field.name == 'descripcion' or field.name == 'compatibilidad' or field.name == 'aplicacion' or field.name == 'ficha_tecnica' or field.name == 'condiciones_almacenamiento' %} is-wide{% endif %}">
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}{% if field.field.required %} <span class="consumable-required">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="consumable-help">{{ field.help_text }}</small>{% endif %}
+                    {% if field.name == 'foto_frente' or field.name == 'foto_lado' or field.name == 'foto_perfil' %}
+                    <small class="consumable-help">Imagen JPG, PNG o WEBP; máximo 5 MB.</small>
+                    {% elif field.name == 'ficha_tecnica' %}
+                    <small class="consumable-help">Archivo PDF opcional; máximo 20 MB.</small>
+                    {% endif %}
+                    {% if field.errors %}
+                    <ul class="consumable-errors" role="alert">
+                        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+
+        <div class="consumables-actions">
+            {% if editing %}
+            <a class="consumables-button secondary" href="{% url 'mantenimiento_consumible_detalle' consumible.id %}">Cancelar</a>
+            {% else %}
+            <a class="consumables-button secondary" href="{% url 'mantenimiento' %}">Volver a Mantenimiento</a>
+            {% endif %}
+            <button class="consumables-button" type="submit">{{ submit_text }}</button>
+        </div>
+    </form>
+</main>
+{% endblock %}

@@ -1,0 +1,680 @@
+{% extends 'base.html' %}
+
+{% block title %}Financiero de mantenimiento{% endblock %}
+{% block page_title %}Mantenimiento · Financiero{% endblock %}
+
+{% block content %}
+<style>
+    .finance-page {
+        --finance-ink: #1c2d45;
+        --finance-muted: #748297;
+        --finance-line: #e8edf3;
+        max-width: 1280px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+    }
+
+    .finance-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 28px 32px;
+        border-radius: 18px;
+        background: linear-gradient(120deg, #25304c 0%, #514567 58%, #83633f 130%);
+        color: #fff;
+        box-shadow: 0 14px 30px rgba(39, 43, 69, .17);
+    }
+
+    .finance-hero:after {
+        position: absolute;
+        top: -105px;
+        right: 12px;
+        width: 270px;
+        height: 270px;
+        border: 1px solid rgba(255, 255, 255, .13);
+        border-radius: 50%;
+        box-shadow: 0 0 0 28px rgba(255, 255, 255, .035), 0 0 0 58px rgba(255, 255, 255, .025);
+        content: "";
+    }
+
+    .finance-eyebrow {
+        display: block;
+        margin-bottom: 8px;
+        color: #e5c998;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .finance-hero h1 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(24px, 3vw, 34px);
+        letter-spacing: -.035em;
+    }
+
+    .finance-hero p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, .8);
+        font-size: 14px;
+    }
+
+    .finance-updated {
+        position: absolute;
+        z-index: 1;
+        right: 28px;
+        bottom: 25px;
+        color: rgba(255, 255, 255, .76);
+        font-size: 12px;
+    }
+
+    .finance-section-heading {
+        margin: 2px 2px -8px;
+    }
+
+    .finance-section-heading h2 {
+        margin: 0;
+        color: var(--finance-ink);
+        font-size: 19px;
+        letter-spacing: -.025em;
+    }
+
+    .finance-section-heading p {
+        margin: 5px 0 0;
+        color: var(--finance-muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .finance-kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .finance-card,
+    .finance-panel {
+        min-width: 0;
+        border: 1px solid var(--finance-line);
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(28, 48, 74, .045);
+    }
+
+    .finance-card {
+        position: relative;
+        min-height: 178px;
+        padding: 19px 18px 17px;
+    }
+
+    .finance-card:before {
+        position: absolute;
+        top: 0;
+        left: 18px;
+        width: 34px;
+        height: 3px;
+        border-radius: 0 0 4px 4px;
+        background: var(--finance-accent, #92754d);
+        content: "";
+    }
+
+    .finance-card-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .finance-card-title {
+        color: #53647b;
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.4;
+    }
+
+    .finance-icon {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        place-items: center;
+        border-radius: 9px;
+        background: var(--finance-tint, #f5f1e9);
+        color: var(--finance-accent, #92754d);
+        font-size: 15px;
+    }
+
+    .finance-value {
+        margin-top: 13px;
+        color: #a0aaba;
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -.035em;
+        line-height: 1.1;
+    }
+
+    .finance-value small {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+    }
+
+    .finance-description {
+        margin: 9px 0 0;
+        color: var(--finance-muted);
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    .finance-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 9px;
+        padding: 5px 8px;
+        border-radius: 99px;
+        background: #f7f3eb;
+        color: #8a7047;
+        font-size: 10px;
+        font-weight: 750;
+    }
+
+    .finance-charts {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+        gap: 16px;
+    }
+
+    .finance-panel {
+        padding: 21px 22px;
+    }
+
+    .finance-panel h3 {
+        margin: 0;
+        color: var(--finance-ink);
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .finance-panel-subtitle {
+        margin: 5px 0 0;
+        color: var(--finance-muted);
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    .budget-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 17px;
+    }
+
+    .budget-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #66758a;
+        font-size: 10px;
+        font-weight: 650;
+    }
+
+    .budget-legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--legend-color);
+    }
+
+    .budget-chart {
+        position: relative;
+        display: grid;
+        height: 178px;
+        margin-top: 12px;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid #edf1f5;
+        border-radius: 11px;
+        background: repeating-linear-gradient(to bottom, #fff 0, #fff 40px, #f0f3f7 41px, #fff 42px);
+    }
+
+    .finance-chart-empty {
+        max-width: 270px;
+        padding: 13px 15px;
+        border: 1px solid rgba(232, 237, 243, .95);
+        border-radius: 11px;
+        background: rgba(255, 255, 255, .95);
+        color: var(--finance-muted);
+        font-size: 11px;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    .finance-chart-empty strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #526178;
+        font-size: 12px;
+    }
+
+    .cost-breakdown {
+        display: flex;
+        min-height: 214px;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(17px, 3vw, 30px);
+        padding: 14px 0;
+    }
+
+    .cost-donut {
+        display: grid;
+        width: 144px;
+        height: 144px;
+        flex: 0 0 144px;
+        place-items: center;
+        border-radius: 50%;
+        background: conic-gradient(#e9edf2 0deg 360deg);
+    }
+
+    .cost-donut-hole {
+        display: flex;
+        width: 98px;
+        height: 98px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(24, 42, 67, .06);
+    }
+
+    .cost-donut-value {
+        color: #a0aaba;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .cost-donut-label {
+        margin-top: 5px;
+        color: var(--finance-muted);
+        font-size: 10px;
+    }
+
+    .cost-legend {
+        display: grid;
+        gap: 13px;
+    }
+
+    .cost-legend-item {
+        display: grid;
+        grid-template-columns: 8px minmax(84px, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        color: #586980;
+        font-size: 10px;
+    }
+
+    .cost-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--cost-color);
+    }
+
+    .cost-legend-item strong {
+        color: #8793a3;
+        font-size: 10px;
+    }
+
+    .finance-panel-note {
+        margin: 0;
+        padding-top: 12px;
+        border-top: 1px solid #eef2f6;
+        color: #8391a3;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .asset-finance-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .asset-finance-card {
+        min-height: 194px;
+        padding: 20px;
+    }
+
+    .asset-finance-card h3 {
+        margin: 0;
+        color: var(--finance-ink);
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.4;
+    }
+
+    .asset-finance-value {
+        margin-top: 18px;
+        color: #a0aaba;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -.03em;
+    }
+
+    .replacement-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 16px;
+        padding: 7px 10px;
+        border: 1px solid #ede5d7;
+        border-radius: 9px;
+        background: #fbf8f2;
+        color: #8a7047;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #c59b57;
+    }
+
+    .formula-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .formula-card {
+        position: relative;
+        min-height: 164px;
+        padding: 21px 22px 18px 67px;
+    }
+
+    .formula-number {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border-radius: 10px;
+        background: #f4efe6;
+        color: #856d46;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .formula-card h3 {
+        margin: 0;
+        color: var(--finance-ink);
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .formula-equation {
+        margin: 13px 0 0;
+        padding: 11px 12px;
+        border: 1px solid #eee9df;
+        border-radius: 9px;
+        background: #fbfaf7;
+        color: #65573e;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.6;
+    }
+
+    .formula-caption {
+        margin: 8px 0 0;
+        color: var(--finance-muted);
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .finance-data-note {
+        padding: 13px 16px;
+        border: 1px solid #e8e4da;
+        border-radius: 11px;
+        background: #faf8f3;
+        color: #74694f;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    .finance-data-note strong {
+        color: #5c503a;
+    }
+
+    @media (max-width: 980px) {
+        .finance-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .finance-charts {
+            grid-template-columns: 1fr;
+        }
+
+        .asset-finance-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 620px) {
+        .finance-hero {
+            padding: 23px 21px 58px;
+        }
+
+        .finance-updated {
+            right: 21px;
+            bottom: 19px;
+        }
+
+        .finance-kpis,
+        .asset-finance-grid,
+        .formula-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .finance-card {
+            min-height: 150px;
+        }
+
+        .finance-panel {
+            padding: 18px 16px;
+        }
+
+        .cost-breakdown {
+            gap: 15px;
+        }
+
+        .cost-donut {
+            width: 124px;
+            height: 124px;
+            flex-basis: 124px;
+        }
+
+        .cost-donut-hole {
+            width: 84px;
+            height: 84px;
+        }
+
+        .formula-card {
+            padding-right: 16px;
+        }
+    }
+
+    @media (max-width: 390px) {
+        .cost-breakdown {
+            flex-direction: column;
+            padding-bottom: 18px;
+        }
+
+        .cost-legend {
+            width: min(250px, 100%);
+        }
+    }
+</style>
+
+<main class="finance-page">
+    <header class="finance-hero">
+        <span class="finance-eyebrow">Mantenimiento · Control de costos</span>
+        <h1>Visión ejecutiva</h1>
+        <p>Panorama financiero de mantenimiento, activos y centros de costos.</p>
+        <span class="finance-updated">Actualizado: {{ fecha_actualizacion|date:"d/m/Y" }}</span>
+    </header>
+
+    <div class="finance-section-heading">
+        <h2>Tarjetas KPI de resumen</h2>
+        <p>Costos, presupuesto y rentabilidad de la operación.</p>
+    </div>
+
+    <section class="finance-kpis" aria-label="Indicadores financieros de mantenimiento">
+        <article class="finance-card" style="--finance-accent:#a17b42;--finance-tint:#f6f0e5">
+            <div class="finance-card-heading">
+                <span class="finance-card-title">Costo total de mantenimiento (TCM)</span>
+                <span class="finance-icon" aria-hidden="true">◈</span>
+            </div>
+            <div class="finance-value">Sin datos</div>
+            <p class="finance-description">Gasto acumulado del mes frente al presupuesto asignado.</p>
+            <span class="finance-badge">Mano de obra · repuestos · servicios externos</span>
+        </article>
+
+        <article class="finance-card" style="--finance-accent:#27816f;--finance-tint:#eaf5f1">
+            <div class="finance-card-heading">
+                <span class="finance-card-title">Costo de mantenimiento / RAV</span>
+                <span class="finance-icon" aria-hidden="true">%</span>
+            </div>
+            <div class="finance-value">Sin datos</div>
+            <span class="finance-badge">Referencia ideal: 2–4% anual</span>
+            <p class="finance-description">Costo anual de mantenimiento respecto al valor de reposición de activos.</p>
+        </article>
+
+        <article class="finance-card" style="--finance-accent:#b36d42;--finance-tint:#fbefe8">
+            <div class="finance-card-heading">
+                <span class="finance-card-title">Costo por hora de parada</span>
+                <span class="finance-icon" aria-hidden="true">◷</span>
+            </div>
+            <div class="finance-value">Sin datos <small>/ h</small></div>
+            <p class="finance-description">Pérdida económica estimada por cada hora de máquina detenida.</p>
+        </article>
+
+        <article class="finance-card" style="--finance-accent:#6476ad;--finance-tint:#edf0f8">
+            <div class="finance-card-heading">
+                <span class="finance-card-title">Margen de contribución por línea / producto</span>
+                <span class="finance-icon" aria-hidden="true">⌁</span>
+            </div>
+            <div class="finance-value">Sin datos</div>
+            <p class="finance-description">Rentabilidad neta después de costos directos de producción y mantenimiento.</p>
+        </article>
+    </section>
+
+    <div class="finance-section-heading">
+        <h2>Seguimiento del presupuesto</h2>
+        <p>Comparativo mensual de presupuesto planeado frente al gasto real.</p>
+    </div>
+
+    <section class="finance-charts" aria-label="Gráficos financieros">
+        <article class="finance-panel">
+            <h3>Evolución del presupuesto</h3>
+            <p class="finance-panel-subtitle">Presupuesto planeado vs. gasto real, mes a mes</p>
+            <div class="budget-legend" aria-label="Series del gráfico">
+                <span class="budget-legend-item"><span class="budget-legend-dot" style="--legend-color:#7184b7"></span>Presupuesto planeado</span>
+                <span class="budget-legend-item"><span class="budget-legend-dot" style="--legend-color:#bd8e50"></span>Gasto real</span>
+            </div>
+            <div class="budget-chart" role="img" aria-label="Sin datos de presupuesto planeado ni gasto real">
+                <div class="finance-chart-empty">
+                    <strong>Sin historial presupuestario</strong>
+                    Registra presupuestos y gastos reales mensuales para visualizar esta tendencia.
+                </div>
+            </div>
+        </article>
+
+        <article class="finance-panel">
+            <h3>Desglose de costos</h3>
+            <p class="finance-panel-subtitle">Participación porcentual por rubro de mantenimiento</p>
+            <div class="cost-breakdown">
+                <div class="cost-donut" role="img" aria-label="Sin datos para el desglose porcentual de costos">
+                    <div class="cost-donut-hole">
+                        <span class="cost-donut-value">—</span>
+                        <span class="cost-donut-label">sin datos</span>
+                    </div>
+                </div>
+                <div class="cost-legend">
+                    <div class="cost-legend-item"><span class="cost-dot" style="--cost-color:#bd8e50"></span><span>Repuestos</span><strong>—</strong></div>
+                    <div class="cost-legend-item"><span class="cost-dot" style="--cost-color:#7184b7"></span><span>Mano de obra interna</span><strong>—</strong></div>
+                    <div class="cost-legend-item"><span class="cost-dot" style="--cost-color:#27816f"></span><span>Contratistas</span><strong>—</strong></div>
+                    <div class="cost-legend-item"><span class="cost-dot" style="--cost-color:#b36d42"></span><span>Paradas de planta</span><strong>—</strong></div>
+                </div>
+            </div>
+            <p class="finance-panel-note">El gráfico se completará cuando se registren costos reales por categoría.</p>
+        </article>
+    </section>
+
+    <div class="finance-section-heading">
+        <h2>Vista financiera por activos o centros de costos</h2>
+        <p>Evaluación del ciclo de vida, el retorno del trabajo y las decisiones de inversión.</p>
+    </div>
+
+    <section class="asset-finance-grid" aria-label="Finanzas por activo o centro de costos">
+        <article class="finance-panel asset-finance-card">
+            <h3>Costo Total de Propiedad (TCO)</h3>
+            <div class="asset-finance-value">Sin datos</div>
+            <p class="finance-description">Costo histórico de compra, operación y reparación del activo durante su vida útil.</p>
+        </article>
+
+        <article class="finance-panel asset-finance-card">
+            <h3>Rentabilidad por Orden de Trabajo</h3>
+            <div class="asset-finance-value">Sin datos</div>
+            <p class="finance-description">Costo real de repuestos y horas-hombre frente al valor del producto fabricado.</p>
+        </article>
+
+        <article class="finance-panel asset-finance-card">
+            <h3>Análisis de Reparar vs. Reemplazar</h3>
+            <span class="replacement-status"><span class="status-dot"></span>Evaluación pendiente</span>
+            <p class="finance-description">Se requiere costo correctivo acumulado de 12 meses, valor de reemplazo y un umbral de alerta configurado.</p>
+        </article>
+    </section>
+
+    <div class="finance-section-heading">
+        <h2>Fórmulas financieras claves</h2>
+        <p>Referencias de cálculo para medir el impacto económico de la producción y el mantenimiento.</p>
+    </div>
+
+    <section class="formula-grid" aria-label="Fórmulas financieras">
+        <article class="finance-panel formula-card">
+            <span class="formula-number">01</span>
+            <h3>Costo por hora de parada imprevista</h3>
+            <p class="formula-equation">
+                Costo por hora = (Margen bruto total esperado − Costos variables de producción)
+                ÷ Horas operativas totales planificadas
+            </p>
+            <p class="formula-caption">Expresa el impacto económico estimado de cada hora de parada no planificada.</p>
+        </article>
+
+        <article class="finance-panel formula-card">
+            <span class="formula-number">02</span>
+            <h3>Costo de mantenimiento por unidad producida</h3>
+            <p class="formula-equation">
+                Costo unitario = Costo total de mantenimiento en el período
+                ÷ Unidades totales producidas
+            </p>
+            <p class="formula-caption">Permite comparar el costo de mantenimiento con el volumen de producción.</p>
+        </article>
+    </section>
+
+    <aside class="finance-data-note">
+        <strong>Sobre los datos:</strong>
+        hoy se registran algunos costos estimados de órdenes y precios de adquisición de herramientas, pero no gastos reales,
+        presupuestos, valores de reposición, costos de parada ni producción valorizada. Por eso las tarjetas financieras se
+        muestran sin datos; la evaluación de reparar o reemplazar tampoco emitirá recomendaciones hasta contar con esos valores
+        y definir el umbral correspondiente.
+    </aside>
+</main>
+{% endblock %}

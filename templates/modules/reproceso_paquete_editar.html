@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar paquete de reproceso - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}Editar paquete de reproceso{% endblock %}
+
+{% block content %}
+<style>
+    .reprocess-edit {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 24px;
+        border: 1px solid #edf0f2;
+        border-radius: 14px;
+        background: white;
+        box-shadow: 0 4px 14px rgba(31, 45, 61, 0.05);
+    }
+
+    .reprocess-edit h1 {
+        margin-top: 0;
+        color: #202a33;
+    }
+
+    .edit-summary,
+    .edit-note {
+        margin: 0 0 18px;
+        color: #53616c;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .edit-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .edit-field label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 650;
+    }
+
+    .edit-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .edit-button {
+        min-height: 42px;
+        padding: 9px 16px;
+        border: 0;
+        border-radius: 7px;
+        background: #27814f;
+        color: white;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .edit-errors {
+        margin: 0 0 18px;
+        color: #b42318;
+    }
+
+    .field-error {
+        display: block;
+        margin-top: 5px;
+        color: #b42318;
+        font-size: 12px;
+    }
+
+    @media (max-width: 650px) {
+        .edit-fields {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<main class="reprocess-edit">
+    <h1>Editar {{ paquete.codigo_paquete }}</h1>
+    <p class="edit-summary">
+        Paquete de origen: <strong>{{ registro.paquete_origen.codigo_paquete }}</strong>
+        ({{ registro.paquete_origen.cantidad_piezas }} piezas).
+    </p>
+    {% if paquete_balance %}
+    <p class="edit-note">
+        Si cambia la cantidad, se ajustará {{ paquete_balance.codigo_paquete }} automáticamente
+        para conservar el total del paquete de origen.
+    </p>
+    {% else %}
+    <p class="edit-note">Este es el único paquete resultante; su cantidad debe mantenerse igual a la del paquete de origen.</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <ul class="edit-errors" role="alert">
+            {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="edit-fields">
+            {% for field in form %}
+            <div class="edit-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="edit-actions">
+            <button class="edit-button" type="submit">Guardar cambios</button>
+            <a href="{% url 'reproceso' %}">Cancelar</a>
+        </div>
+    </form>
+</main>
+{% endblock %}

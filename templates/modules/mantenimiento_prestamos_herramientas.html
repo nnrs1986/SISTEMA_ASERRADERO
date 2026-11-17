@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+
+{% block title %}Préstamo de herramientas - Mantenimiento{% endblock %}
+{% block page_title %}Mantenimiento · Préstamo de herramientas{% endblock %}
+
+{% block content %}
+<style>
+    .loans-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+    }
+
+    .loans-header {
+        padding: 27px 30px;
+        border-radius: 17px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+        box-shadow: 0 12px 28px rgba(31, 45, 61, .13);
+    }
+
+    .loans-eyebrow {
+        margin: 0 0 7px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        opacity: .8;
+    }
+
+    .loans-header h2 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(24px, 3vw, 32px);
+        letter-spacing: -.03em;
+    }
+
+    .loans-header p:last-child {
+        max-width: 700px;
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, .9);
+        line-height: 1.55;
+    }
+
+    .loan-section,
+    .loans-list {
+        overflow: hidden;
+        border: 1px solid #e6ebf2;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .055);
+    }
+
+    .loan-section-heading,
+    .loans-list-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 17px 22px;
+        border-bottom: 1px solid #edf1f6;
+        background: linear-gradient(105deg, #f8fafc, #fff);
+    }
+
+    .loan-section-icon {
+        display: grid;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 12px;
+        background: #eef2ff;
+        font-size: 19px;
+    }
+
+    .loan-section-heading h3,
+    .loans-list-heading h3 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 17px;
+    }
+
+    .loan-section-heading p,
+    .loans-list-heading p {
+        margin: 3px 0 0;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .loan-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 17px;
+        padding: 21px 22px 23px;
+    }
+
+    .loan-field {
+        min-width: 0;
+    }
+
+    .loan-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .loan-required {
+        color: #dc2626;
+    }
+
+    .consumable-input {
+        width: 100%;
+        min-height: 43px;
+        padding: 10px 12px;
+        border: 1px solid #d8e0ea;
+        border-radius: 9px;
+        outline: none;
+        background: #fff;
+        color: #1e293b;
+        font: inherit;
+        font-size: 13px;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .consumable-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, .14);
+    }
+
+    .loan-errors {
+        margin: 6px 0 0;
+        padding-left: 17px;
+        color: #b91c1c;
+        font-size: 12px;
+    }
+
+    .loan-errors li + li {
+        margin-top: 3px;
+    }
+
+    .loan-error-summary {
+        margin: 18px 22px 0;
+        padding: 13px 16px;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        color: #991b1b;
+        background: #fef2f2;
+        font-size: 13px;
+    }
+
+    .loans-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 3px 22px 22px;
+    }
+
+    .loans-button {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 19px;
+        border: 0;
+        border-radius: 9px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--sidebar-start), var(--sidebar-end));
+        box-shadow: 0 7px 16px rgba(31, 45, 61, .15);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 750;
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .loans-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(31, 45, 61, .2);
+    }
+
+    .loans-button.secondary {
+        border: 1px solid #d9e1eb;
+        color: #475569;
+        background: #fff;
+        box-shadow: none;
+    }
+
+    .loans-list-heading {
+        justify-content: space-between;
+        background: #f8fafc;
+    }
+
+    .loans-list-heading-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .loans-table-wrap {
+        overflow-x: auto;
+    }
+
+    .loans-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .loans-table th,
+    .loans-table td {
+        padding: 13px 16px;
+        border-bottom: 1px solid #edf1f6;
+        color: #334155;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .loans-table th {
+        color: #64748b;
+        background: #fbfcfe;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .loans-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .loans-empty {
+        margin: 0;
+        padding: 25px 20px;
+        color: #64748b;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    @media (max-width: 680px) {
+        .loans-header {
+            padding: 22px;
+        }
+
+        .loan-fields {
+            grid-template-columns: minmax(0, 1fr);
+            padding: 18px;
+        }
+
+        .loan-section-heading,
+        .loans-list-heading {
+            padding: 15px 17px;
+        }
+
+        .loans-actions {
+            justify-content: stretch;
+            padding: 3px 18px 18px;
+        }
+
+        .loans-actions .loans-button {
+            flex: 1 1 160px;
+        }
+    }
+</style>
+
+<main class="loans-shell">
+    <header class="loans-header">
+        <p class="loans-eyebrow">Mantenimiento · Control de herramientas</p>
+        <h2>Préstamo de herramientas</h2>
+        <p>Registra cada préstamo con el SKU de una herramienta existente y consulta el historial.</p>
+    </header>
+
+    <form method="post">
+        {% csrf_token %}
+        <section class="loan-section" aria-labelledby="loan-form-title">
+            <div class="loan-section-heading">
+                <span class="loan-section-icon" aria-hidden="true">🔄</span>
+                <div>
+                    <h3 id="loan-form-title">Registrar un préstamo</h3>
+                    <p>El SKU debe pertenecer a una herramienta registrada.</p>
+                </div>
+            </div>
+            {% if form.non_field_errors %}
+            <div class="loan-error-summary" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="loan-fields">
+                {% for field in form %}
+                <div class="loan-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="loan-required">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <ul class="loan-errors" role="alert">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="loans-actions">
+                <a class="loans-button secondary" href="{% url 'mantenimiento_herramientas' %}">Volver a herramientas</a>
+                <button class="loans-button" type="submit">Guardar préstamo</button>
+            </div>
+        </section>
+    </form>
+
+    <section class="loans-list" aria-labelledby="loans-list-title">
+        <div class="loans-list-heading">
+            <div class="loans-list-heading-content">
+                <div>
+                    <h3 id="loans-list-title">Préstamos registrados</h3>
+                    <p>Listado de préstamos asociados a herramientas registradas en el sistema.</p>
+                </div>
+                <a class="loans-button" href="{% url 'mantenimiento_planilla_prestamo_herramientas' %}" target="_blank" rel="noopener">Imprimir planilla</a>
+            </div>
+        </div>
+        {% if prestamos %}
+        <div class="loans-table-wrap">
+            <table class="loans-table">
+                <thead>
+                    <tr>
+                        <th>SKU identificador</th>
+                        <th>Nombre herramienta</th>
+                        <th>Fecha de préstamo</th>
+                        <th>Nombre de quien pidió prestada</th>
+                        <th>Fecha de devolución</th>
+                        <th>Nombre de responsable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestamo in prestamos %}
+                    <tr>
+                        <td>{{ prestamo.herramienta.codigo_interno }}</td>
+                        <td>{{ prestamo.herramienta.nombre }}</td>
+                        <td>{{ prestamo.fecha_prestamo|date:"d/m/Y" }}</td>
+                        <td>{{ prestamo.nombre_solicitante }}</td>
+                        <td>{{ prestamo.fecha_devolucion|date:"d/m/Y" }}</td>
+                        <td>{{ prestamo.nombre_responsable }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="loans-empty">Aún no hay préstamos registrados.</p>
+        {% endif %}
+    </section>
+</main>
+
+{% if sku_no_encontrado %}
+<script>
+    window.alert('la herramienta solicitada no existe o no esta registrada en la base de datos');
+</script>
+{% endif %}
+{% endblock %}

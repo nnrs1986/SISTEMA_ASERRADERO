@@ -1,0 +1,624 @@
+{% extends 'base.html' %}
+
+{% block title %}Indicadores de mantenimiento{% endblock %}
+{% block page_title %}Mantenimiento · Indicadores{% endblock %}
+
+{% block content %}
+<style>
+    .indicators-page {
+        --ink: #172b4d;
+        --muted: #718096;
+        --line: #e8edf4;
+        --green: #159b79;
+        max-width: 1280px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+    }
+
+    .indicators-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 28px 32px;
+        border-radius: 18px;
+        background: linear-gradient(120deg, #102d43, #176b68);
+        color: #fff;
+        box-shadow: 0 14px 30px rgba(20, 67, 77, .16);
+    }
+
+    .indicators-hero:after {
+        position: absolute;
+        top: -90px;
+        right: -20px;
+        width: 270px;
+        height: 270px;
+        border: 1px solid rgba(255, 255, 255, .13);
+        border-radius: 50%;
+        box-shadow: 0 0 0 28px rgba(255, 255, 255, .035), 0 0 0 58px rgba(255, 255, 255, .025);
+        content: "";
+    }
+
+    .indicators-eyebrow {
+        display: block;
+        margin-bottom: 8px;
+        color: #a7e7d6;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .indicators-hero h1 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(24px, 3vw, 34px);
+        letter-spacing: -.035em;
+    }
+
+    .indicators-hero p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, .78);
+        font-size: 14px;
+    }
+
+    .indicators-updated {
+        position: absolute;
+        z-index: 1;
+        right: 28px;
+        bottom: 25px;
+        color: rgba(255, 255, 255, .78);
+        font-size: 12px;
+    }
+
+    .indicators-section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 2px 2px -8px;
+    }
+
+    .indicators-section-heading h2 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 18px;
+        letter-spacing: -.02em;
+    }
+
+    .indicators-section-heading p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .indicator-kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .indicator-card,
+    .indicator-panel {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(28, 48, 74, .045);
+    }
+
+    .indicator-card {
+        position: relative;
+        min-height: 158px;
+        padding: 19px 18px 17px;
+    }
+
+    .indicator-card:before {
+        position: absolute;
+        top: 0;
+        left: 18px;
+        width: 34px;
+        height: 3px;
+        border-radius: 0 0 4px 4px;
+        background: var(--accent, #159b79);
+        content: "";
+    }
+
+    .indicator-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .indicator-label {
+        color: #53647b;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .indicator-icon {
+        display: grid;
+        width: 31px;
+        height: 31px;
+        place-items: center;
+        border-radius: 9px;
+        background: color-mix(in srgb, var(--accent, #159b79) 11%, white);
+        color: var(--accent, #159b79);
+        font-size: 15px;
+    }
+
+    .indicator-value {
+        margin-top: 12px;
+        color: var(--ink);
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -.05em;
+        line-height: 1;
+    }
+
+    .indicator-value.unavailable {
+        color: #a0adbb;
+        letter-spacing: -.025em;
+    }
+
+    .indicator-footnote {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .indicator-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 10px;
+        padding: 5px 8px;
+        border-radius: 99px;
+        background: #f1f5f9;
+        color: #69798d;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .indicator-panel {
+        padding: 21px 23px;
+    }
+
+    .backlog-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 20px;
+        background: linear-gradient(110deg, #fff, #f8fcfb);
+    }
+
+    .panel-heading {
+        margin: 0;
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .panel-description {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .backlog-stats {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .backlog-stat {
+        min-width: 104px;
+    }
+
+    .backlog-number {
+        display: block;
+        color: var(--ink);
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -.045em;
+        line-height: 1.1;
+    }
+
+    .backlog-caption {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    .backlog-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 13px;
+        color: #147d6d;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .backlog-link:hover {
+        text-decoration: underline;
+    }
+
+    .indicator-charts {
+        display: grid;
+        grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+        gap: 16px;
+    }
+
+    .chart-panel {
+        padding: 20px 21px;
+    }
+
+    .chart-heading {
+        margin: 0;
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .chart-subtitle {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    .donut-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(18px, 4vw, 38px);
+        min-height: 188px;
+        padding: 14px 0 4px;
+    }
+
+    .donut-chart {
+        display: grid;
+        width: 152px;
+        height: 152px;
+        flex: 0 0 152px;
+        place-items: center;
+        border-radius: 50%;
+        background: conic-gradient(
+            #20a581 0deg {{ grados_preventivo }}deg,
+            #f0a94b {{ grados_preventivo }}deg {{ grados_preventivo|add:grados_correctivo }}deg,
+            #97a8bb {{ grados_preventivo|add:grados_correctivo }}deg 360deg
+        );
+    }
+
+    .donut-chart.empty {
+        background: conic-gradient(#e9eef4 0deg 360deg);
+    }
+
+    .donut-hole {
+        display: flex;
+        width: 104px;
+        height: 104px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 2px 8px rgba(24, 42, 67, .06);
+    }
+
+    .donut-total {
+        color: var(--ink);
+        font-size: 25px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .donut-total-label {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 10px;
+    }
+
+    .chart-legend {
+        display: grid;
+        gap: 13px;
+    }
+
+    .legend-item {
+        display: grid;
+        grid-template-columns: 9px minmax(66px, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        color: #53647b;
+        font-size: 11px;
+    }
+
+    .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--dot);
+    }
+
+    .legend-item strong {
+        color: var(--ink);
+        font-size: 11px;
+    }
+
+    .chart-note {
+        margin: 0;
+        padding-top: 12px;
+        border-top: 1px solid #eef2f6;
+        color: #8391a3;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .trend-chart {
+        position: relative;
+        display: grid;
+        height: 188px;
+        margin-top: 15px;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid #edf1f6;
+        border-radius: 11px;
+        background: repeating-linear-gradient(to bottom, #fff 0, #fff 43px, #f0f3f7 44px, #fff 45px);
+    }
+
+    .trend-empty {
+        max-width: 230px;
+        padding: 12px;
+        border: 1px solid rgba(232, 237, 244, .9);
+        border-radius: 11px;
+        background: rgba(255, 255, 255, .94);
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    .trend-empty strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #52657a;
+        font-size: 12px;
+    }
+
+    .indicators-data-note {
+        padding: 13px 16px;
+        border: 1px solid #dfece8;
+        border-radius: 11px;
+        background: #f4faf8;
+        color: #557368;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    .indicators-data-note strong {
+        color: #285d50;
+    }
+
+    @media (max-width: 900px) {
+        .indicator-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .indicator-charts {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .indicators-hero {
+            padding: 23px 21px 58px;
+        }
+
+        .indicators-updated {
+            right: 21px;
+            bottom: 19px;
+        }
+
+        .indicator-kpis {
+            gap: 10px;
+        }
+
+        .indicator-card {
+            min-height: 148px;
+            padding: 16px 14px;
+        }
+
+        .indicator-value {
+            font-size: 26px;
+        }
+
+        .backlog-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .backlog-stats {
+            justify-content: flex-start;
+            gap: 25px;
+        }
+
+        .indicator-panel {
+            padding: 18px 16px;
+        }
+
+        .donut-content {
+            gap: 18px;
+        }
+
+        .donut-chart {
+            width: 128px;
+            height: 128px;
+            flex-basis: 128px;
+        }
+
+        .donut-hole {
+            width: 88px;
+            height: 88px;
+        }
+    }
+
+    @media (max-width: 390px) {
+        .indicator-kpis {
+            grid-template-columns: 1fr;
+        }
+
+        .indicator-card {
+            min-height: 132px;
+        }
+
+        .donut-content {
+            flex-direction: column;
+            padding-bottom: 12px;
+        }
+
+        .chart-legend {
+            width: min(230px, 100%);
+        }
+    }
+</style>
+
+<main class="indicators-page">
+    <header class="indicators-hero">
+        <span class="indicators-eyebrow">Mantenimiento · Panel ejecutivo</span>
+        <h1>Visión de alto nivel ejecutiva</h1>
+        <p>Salud operativa y desempeño de mantenimiento de la planta.</p>
+        <span class="indicators-updated">Actualizado: {{ fecha_actualizacion|date:"d/m/Y" }}</span>
+    </header>
+
+    <div class="indicators-section-heading">
+        <div>
+            <h2>Tarjetas de resumen KPI</h2>
+            <p>Vista general de los indicadores clave de mantenimiento.</p>
+        </div>
+    </div>
+
+    <section class="indicator-kpis" aria-label="Indicadores clave de mantenimiento">
+        <article class="indicator-card" style="--accent:#168b76">
+            <div class="indicator-card-top">
+                <span class="indicator-label">OEE global</span>
+                <span class="indicator-icon" aria-hidden="true">◉</span>
+            </div>
+            <div class="indicator-value unavailable">Sin datos</div>
+            <span class="indicator-trend">— &nbsp; Sin comparación mensual</span>
+            <p class="indicator-footnote">No hay registros de producción y eficiencia para calcularlo.</p>
+        </article>
+
+        <article class="indicator-card" style="--accent:#3679c9">
+            <div class="indicator-card-top">
+                <span class="indicator-label">Disponibilidad</span>
+                <span class="indicator-icon" aria-hidden="true">◷</span>
+            </div>
+            <div class="indicator-value unavailable">Sin datos</div>
+            <p class="indicator-footnote">Requiere horas operativas y paradas de los equipos.</p>
+        </article>
+
+        <article class="indicator-card" style="--accent:#d28a36">
+            <div class="indicator-card-top">
+                <span class="indicator-label">MTBF</span>
+                <span class="indicator-icon" aria-hidden="true">⏱</span>
+            </div>
+            <div class="indicator-value unavailable">Sin datos</div>
+            <p class="indicator-footnote">Horas de operación ÷ horas de máquina registradas.</p>
+        </article>
+
+        <article class="indicator-card" style="--accent:#7657bb">
+            <div class="indicator-card-top">
+                <span class="indicator-label">MTTR</span>
+                <span class="indicator-icon" aria-hidden="true">🔧</span>
+            </div>
+            <div class="indicator-value unavailable">Sin datos</div>
+            <p class="indicator-footnote">Tiempo total de reparación ÷ número de fallas.</p>
+        </article>
+    </section>
+
+    <section class="indicator-panel backlog-panel" aria-labelledby="backlog-title">
+        <div>
+            <h2 class="panel-heading" id="backlog-title">Backlog de mantenimiento</h2>
+            <p class="panel-description">
+                Órdenes sin registro de tiempos de ejecución. Las horas suman únicamente duraciones estimadas
+                ingresadas explícitamente en horas.
+            </p>
+            <a class="backlog-link" href="{% url 'mantenimiento_ordenes_trabajo' %}">
+                Ver órdenes de trabajo <span aria-hidden="true">→</span>
+            </a>
+        </div>
+        <div class="backlog-stats">
+            <div class="backlog-stat">
+                <span class="backlog-number">{{ ordenes_pendientes }}</span>
+                <span class="backlog-caption">órdenes por ejecutar</span>
+            </div>
+            <div class="backlog-stat">
+                <span class="backlog-number">{{ horas_pendientes_estimadas|floatformat:1 }} <small>h</small></span>
+                <span class="backlog-caption">horas estimadas registradas</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="indicators-section-heading">
+        <div>
+            <h2>Distribución y evolución</h2>
+            <p>Resumen visual del trabajo registrado y el desempeño operativo.</p>
+        </div>
+    </div>
+
+    <section class="indicator-charts" aria-label="Gráficos de mantenimiento">
+        <article class="indicator-panel chart-panel">
+            <h3 class="chart-heading">Distribución de órdenes</h3>
+            <p class="chart-subtitle">Conteo por tipo de orden registrada</p>
+            <div class="donut-content">
+                <div class="donut-chart{% if not total_ordenes %} empty{% endif %}" role="img" aria-label="{{ total_ordenes }} órdenes registradas por tipo">
+                    <div class="donut-hole">
+                        <span class="donut-total">{{ total_ordenes }}</span>
+                        <span class="donut-total-label">órdenes</span>
+                    </div>
+                </div>
+                <div class="chart-legend" aria-label="Tipos de orden">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="--dot:#20a581"></span>
+                        <span>Preventivo</span>
+                        <strong>{{ ordenes_por_tipo.preventivo }}</strong>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="--dot:#f0a94b"></span>
+                        <span>Correctivo</span>
+                        <strong>{{ ordenes_por_tipo.correctivo }}</strong>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="--dot:#97a8bb"></span>
+                        <span>Otros tipos</span>
+                        <strong>{{ otros_tipos }}</strong>
+                    </div>
+                </div>
+            </div>
+            <p class="chart-note">Representa cantidad de órdenes, no horas trabajadas. La clasificación actual no incluye un tipo predictivo.</p>
+        </article>
+
+        <article class="indicator-panel chart-panel">
+            <h3 class="chart-heading">Evolución del OEE / disponibilidad</h3>
+            <p class="chart-subtitle">Tendencia mensual de los indicadores de planta</p>
+            <div class="trend-chart" role="img" aria-label="Gráfico sin datos de OEE ni disponibilidad">
+                <div class="trend-empty">
+                    <strong>Esperando registros operativos</strong>
+                    Agrega horas de operación, paradas y producción para generar la tendencia.
+                </div>
+            </div>
+            <p class="chart-note">Sin valores históricos disponibles para mostrar una evolución confiable.</p>
+        </article>
+    </section>
+
+    <aside class="indicators-data-note">
+        <strong>Sobre los datos:</strong>
+        el registro actual de órdenes no tiene un estado formal, ni captura estructurada de fallas, horas de operación
+        o duración real por tipo de trabajo. Por eso MTBF, MTTR, disponibilidad, OEE y la distribución de horas se
+        muestran sin datos; no se estiman valores que el sistema aún no recopila.
+    </aside>
+</main>
+{% endblock %}

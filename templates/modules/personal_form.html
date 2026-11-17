@@ -1,0 +1,693 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SISTEMA ASERRADERO{% endblock %}
+
+{% block page_title %}{{ module }}{% endblock %}
+
+{% block content %}
+<style>
+    .employee-form-shell {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 14px rgba(15, 23, 42, 0.08);
+        padding: 28px;
+    }
+
+    .form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .form-header h3 {
+        margin: 0;
+        color: #1f2937;
+        font-size: 28px;
+    }
+
+    .section-block {
+        margin-top: 26px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .section-block h4 {
+        margin: 0 0 18px;
+        color: #374151;
+        font-size: 18px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+    }
+
+    .half-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        grid-column: 1 / -1;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .image-input-group {
+        min-width: 0;
+    }
+
+    .image-upload-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .image-preview-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 120px;
+        height: 120px;
+        border: 1px solid #d7deea;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8fafc, #eef2ff);
+        overflow: hidden;
+        box-shadow: inset 0 1px 2px rgba(148, 163, 184, 0.12);
+    }
+
+    .image-preview {
+        display: none;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-preview.is-visible {
+        display: block;
+    }
+
+    .image-preview-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #64748b;
+        font-size: 12px;
+        text-align: center;
+        padding: 12px;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        color: #374151;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .form-control {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid #d7deea;
+        border-radius: 8px;
+        background: #fff;
+        color: #111827;
+        font: inherit;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: rgba(79, 70, 229, 0.7);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 100%;
+        min-height: 44px;
+    }
+
+    .checkbox-row input {
+        width: 18px;
+        height: 18px;
+    }
+
+    .form-help {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .alert-error {
+        color: #b91c1c;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-secondary {
+        background: #eef2ff;
+        color: #374151;
+        border-color: #dfe7ff;
+    }
+
+    .btn-primary {
+        background: var(--module-start);
+        color: white;
+    }
+
+    .hidden-rif {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .half-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="employee-form-shell">
+    <div class="form-header">
+        <h3>{{ title }}</h3>
+        <a href="{% url 'personal' %}" class="btn btn-secondary">Volver</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" style="margin-bottom: 20px;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <section class="section-block">
+            <h4>Datos del trabajador</h4>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label for="id_nombres">Nombre y apellidos</label>
+                    {{ form.nombres }}
+                    {% if form.nombres.errors %}<div class="alert-error">{{ form.nombres.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group image-input-group">
+                    <label for="id_foto">Foto</label>
+                    <div class="image-upload-wrap">
+                        {{ form.foto }}
+                        <div class="image-preview-box">
+                            <img class="image-preview" alt="Vista previa de la foto del trabajador">
+                            <div class="image-preview-placeholder">Vista previa</div>
+                        </div>
+                    </div>
+                    {% if form.foto.errors %}<div class="alert-error">{{ form.foto.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_cedula_identidad">Cédula de identidad</label>
+                    {{ form.cedula_identidad }}
+                    {% if form.cedula_identidad.errors %}<div class="alert-error">{{ form.cedula_identidad.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group image-input-group">
+                    <label for="id_foto_cedula">Foto de la cédula</label>
+                    <div class="image-upload-wrap">
+                        {{ form.foto_cedula }}
+                        <div class="image-preview-box">
+                            <img class="image-preview" alt="Vista previa de la foto de la cédula">
+                            <div class="image-preview-placeholder">Vista previa</div>
+                        </div>
+                    </div>
+                    {% if form.foto_cedula.errors %}<div class="alert-error">{{ form.foto_cedula.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_tiene_rif">¿Tiene RIF?</label>
+                    <div class="checkbox-row">
+                        {{ form.tiene_rif }}
+                        <span>Si</span>
+                    </div>
+                </div>
+
+                <div class="form-group hidden-rif" id="rif-field">
+                    <label for="id_rif">RIF</label>
+                    {{ form.rif }}
+                    {% if form.rif.errors %}<div class="alert-error">{{ form.rif.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_fecha_nacimiento">Fecha de nacimiento</label>
+                    {{ form.fecha_nacimiento }}
+                    {% if form.fecha_nacimiento.errors %}<div class="alert-error">{{ form.fecha_nacimiento.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_nacionalidad">Nacionalidad</label>
+                    {{ form.nacionalidad }}
+                    {% if form.nacionalidad.errors %}<div class="alert-error">{{ form.nacionalidad.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_estado_civil">Estado civil</label>
+                    {{ form.estado_civil }}
+                    {% if form.estado_civil.errors %}<div class="alert-error">{{ form.estado_civil.errors|join:', ' }}</div>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <h4>Ubicación y dirección</h4>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label for="id_direccion">Dirección completa</label>
+                    {{ form.direccion }}
+                    {% if form.direccion.errors %}<div class="alert-error">{{ form.direccion.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_estado">Estado</label>
+                    {{ form.estado }}
+                    {% if form.estado.errors %}<div class="alert-error">{{ form.estado.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_ciudad">Ciudad</label>
+                    {{ form.ciudad }}
+                    {% if form.ciudad.errors %}<div class="alert-error">{{ form.ciudad.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_municipio">Municipio</label>
+                    {{ form.municipio }}
+                    {% if form.municipio.errors %}<div class="alert-error">{{ form.municipio.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_parroquia">Parroquia</label>
+                    {{ form.parroquia }}
+                    {% if form.parroquia.errors %}<div class="alert-error">{{ form.parroquia.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_calle">Calle</label>
+                    {{ form.calle }}
+                    {% if form.calle.errors %}<div class="alert-error">{{ form.calle.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_numero">Número</label>
+                    {{ form.numero }}
+                    {% if form.numero.errors %}<div class="alert-error">{{ form.numero.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group full">
+                    <label for="id_punto_referencia">Punto de referencia</label>
+                    {{ form.punto_referencia }}
+                    {% if form.punto_referencia.errors %}<div class="alert-error">{{ form.punto_referencia.errors|join:', ' }}</div>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <h4>Datos de contacto</h4>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="id_telefono">Teléfono</label>
+                    {{ form.telefono }}
+                    {% if form.telefono.errors %}<div class="alert-error">{{ form.telefono.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_telefono_alternativo">Teléfono alternativo</label>
+                    {{ form.telefono_alternativo }}
+                    {% if form.telefono_alternativo.errors %}<div class="alert-error">{{ form.telefono_alternativo.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_correo_personal">Correo personal</label>
+                    {{ form.correo_personal }}
+                    {% if form.correo_personal.errors %}<div class="alert-error">{{ form.correo_personal.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_correo_empresarial">Correo empresarial</label>
+                    {{ form.correo_empresarial }}
+                    {% if form.correo_empresarial.errors %}<div class="alert-error">{{ form.correo_empresarial.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_contacto_emergencia_nombre">Nombre contacto de emergencia</label>
+                    {{ form.contacto_emergencia_nombre }}
+                    {% if form.contacto_emergencia_nombre.errors %}<div class="alert-error">{{ form.contacto_emergencia_nombre.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_contacto_emergencia_apellido">Apellido contacto de emergencia</label>
+                    {{ form.contacto_emergencia_apellido }}
+                    {% if form.contacto_emergencia_apellido.errors %}<div class="alert-error">{{ form.contacto_emergencia_apellido.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_contacto_emergencia_telefono">Teléfono contacto de emergencia</label>
+                    {{ form.contacto_emergencia_telefono }}
+                    {% if form.contacto_emergencia_telefono.errors %}<div class="alert-error">{{ form.contacto_emergencia_telefono.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_contacto_emergencia_parentesco">Parentesco</label>
+                    {{ form.contacto_emergencia_parentesco }}
+                    {% if form.contacto_emergencia_parentesco.errors %}<div class="alert-error">{{ form.contacto_emergencia_parentesco.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_contacto_emergencia_fecha_verificacion">Fecha de verificación de la información</label>
+                    {{ form.contacto_emergencia_fecha_verificacion }}
+                    {% if form.contacto_emergencia_fecha_verificacion.errors %}<div class="alert-error">{{ form.contacto_emergencia_fecha_verificacion.errors|join:', ' }}</div>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <h4>Administrativo</h4>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="id_en_proceso_contratacion">En proceso de contratación</label>
+                    <div class="checkbox-row">
+                        {{ form.en_proceso_contratacion }}
+                        <span>Si</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_trabajador_activo">Trabajador activo</label>
+                    <div class="checkbox-row">
+                        {{ form.trabajador_activo }}
+                        <span>Si</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_ausencia_desde">Periodo de ausencia o suspensión desde</label>
+                    {{ form.ausencia_desde }}
+                    {% if form.ausencia_desde.errors %}<div class="alert-error">{{ form.ausencia_desde.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_ausencia_hasta">Periodo de ausencia o suspensión hasta</label>
+                    {{ form.ausencia_hasta }}
+                    {% if form.ausencia_hasta.errors %}<div class="alert-error">{{ form.ausencia_hasta.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_en_proceso_egreso">En proceso de egreso</label>
+                    <div class="checkbox-row">
+                        {{ form.en_proceso_egreso }}
+                        <span>Si</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_fecha_egreso">Egresado con fecha de egreso</label>
+                    {{ form.fecha_egreso }}
+                    {% if form.fecha_egreso.errors %}<div class="alert-error">{{ form.fecha_egreso.errors|join:', ' }}</div>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <h4>Información contractual</h4>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="id_codigo_trabajador">Código de trabajador</label>
+                    {{ form.codigo_trabajador }}
+                    {% if form.codigo_trabajador.errors %}<div class="alert-error">{{ form.codigo_trabajador.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_fecha_oferta_seleccion">Fecha de oferta o selección</label>
+                    {{ form.fecha_oferta_seleccion }}
+                    {% if form.fecha_oferta_seleccion.errors %}<div class="alert-error">{{ form.fecha_oferta_seleccion.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_fecha_ingreso">Fecha de ingreso</label>
+                    {{ form.fecha_ingreso }}
+                    {% if form.fecha_ingreso.errors %}<div class="alert-error">{{ form.fecha_ingreso.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_tipo_contrato">Contrato</label>
+                    {{ form.tipo_contrato }}
+                    {% if form.tipo_contrato.errors %}<div class="alert-error">{{ form.tipo_contrato.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_fecha_fin_contrato">Fecha final del contrato</label>
+                    {{ form.fecha_fin_contrato }}
+                    {% if form.fecha_fin_contrato.errors %}<div class="alert-error">{{ form.fecha_fin_contrato.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_area_trabajo">Área de trabajo</label>
+                    {{ form.area_trabajo }}
+                    {% if form.area_trabajo.errors %}<div class="alert-error">{{ form.area_trabajo.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_departamento">Departamento</label>
+                    {{ form.departamento }}
+                    {% if form.departamento.errors %}<div class="alert-error">{{ form.departamento.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_seccion">Sección</label>
+                    {{ form.seccion }}
+                    {% if form.seccion.errors %}<div class="alert-error">{{ form.seccion.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_cargo">Cargo</label>
+                    {{ form.cargo }}
+                    {% if form.cargo.errors %}<div class="alert-error">{{ form.cargo.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="half-grid">
+                    <div class="form-group">
+                        <label for="id_funciones">Funciones</label>
+                        {{ form.funciones }}
+                        {% if form.funciones.errors %}<div class="alert-error">{{ form.funciones.errors|join:', ' }}</div>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_responsabilidades">Responsabilidades</label>
+                        {{ form.responsabilidades }}
+                        {% if form.responsabilidades.errors %}<div class="alert-error">{{ form.responsabilidades.errors|join:', ' }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_nombre_supervisor_directo">Nombre del supervisor directo</label>
+                    {{ form.nombre_supervisor_directo }}
+                    {% if form.nombre_supervisor_directo.errors %}<div class="alert-error">{{ form.nombre_supervisor_directo.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_jornada_horario_trabajo">Jornada y horario de trabajo</label>
+                    {{ form.jornada_horario_trabajo }}
+                    {% if form.jornada_horario_trabajo.errors %}<div class="alert-error">{{ form.jornada_horario_trabajo.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_turno">Turno</label>
+                    {{ form.turno }}
+                    {% if form.turno.errors %}<div class="alert-error">{{ form.turno.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_salario_contratacion">Salario de contratación</label>
+                    {{ form.salario_contratacion }}
+                    {% if form.salario_contratacion.errors %}<div class="alert-error">{{ form.salario_contratacion.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="half-grid">
+                    <div class="form-group">
+                        <label for="id_beneficios">Beneficios</label>
+                        {{ form.beneficios }}
+                        {% if form.beneficios.errors %}<div class="alert-error">{{ form.beneficios.errors|join:', ' }}</div>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_prestaciones">Prestaciones</label>
+                        {{ form.prestaciones }}
+                        {% if form.prestaciones.errors %}<div class="alert-error">{{ form.prestaciones.errors|join:', ' }}</div>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_deducciones">Deducciones</label>
+                        {{ form.deducciones }}
+                        {% if form.deducciones.errors %}<div class="alert-error">{{ form.deducciones.errors|join:', ' }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_responsable_contratacion_nombre">Persona responsable de la contratación (nombre y apellido)</label>
+                    {{ form.responsable_contratacion_nombre }}
+                    {% if form.responsable_contratacion_nombre.errors %}<div class="alert-error">{{ form.responsable_contratacion_nombre.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_responsable_contratacion_firma">Firma del responsable</label>
+                    {{ form.responsable_contratacion_firma }}
+                    {% if form.responsable_contratacion_firma.errors %}<div class="alert-error">{{ form.responsable_contratacion_firma.errors|join:', ' }}</div>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <h4>Historial de cambios laborales</h4>
+            <div class="half-grid">
+                <div class="form-group">
+                    <label for="id_historial_ascensos">Ascensos</label>
+                    {{ form.historial_ascensos }}
+                    {% if form.historial_ascensos.errors %}<div class="alert-error">{{ form.historial_ascensos.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_historial_cambios_cargo">Cambios de cargo</label>
+                    {{ form.historial_cambios_cargo }}
+                    {% if form.historial_cambios_cargo.errors %}<div class="alert-error">{{ form.historial_cambios_cargo.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_historial_traslados">Traslados</label>
+                    {{ form.historial_traslados }}
+                    {% if form.historial_traslados.errors %}<div class="alert-error">{{ form.historial_traslados.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_historial_cambios_horario">Cambios de horario</label>
+                    {{ form.historial_cambios_horario }}
+                    {% if form.historial_cambios_horario.errors %}<div class="alert-error">{{ form.historial_cambios_horario.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_historial_cambio_turno">Cambio de turno</label>
+                    {{ form.historial_cambio_turno }}
+                    {% if form.historial_cambio_turno.errors %}<div class="alert-error">{{ form.historial_cambio_turno.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_historial_modificacion_salarial">Modificación salarial</label>
+                    {{ form.historial_modificacion_salarial }}
+                    {% if form.historial_modificacion_salarial.errors %}<div class="alert-error">{{ form.historial_modificacion_salarial.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_historial_cambio_supervisor">Cambio de supervisor</label>
+                    {{ form.historial_cambio_supervisor }}
+                    {% if form.historial_cambio_supervisor.errors %}<div class="alert-error">{{ form.historial_cambio_supervisor.errors|join:', ' }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_historial_cambio_jornada">Cambio de jornada</label>
+                    {{ form.historial_cambio_jornada }}
+                    {% if form.historial_cambio_jornada.errors %}<div class="alert-error">{{ form.historial_cambio_jornada.errors|join:', ' }}</div>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <div class="form-actions">
+            <a href="{% url 'personal' %}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">{{ submit_text|default:'Guardar trabajador' }}</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const tieneRif = document.getElementById('id_tiene_rif');
+    const rifField = document.getElementById('rif-field');
+
+    function toggleRifField() {
+        if (!tieneRif || !rifField) return;
+
+        if (tieneRif.checked) {
+            rifField.classList.remove('hidden-rif');
+            rifField.querySelector('input').setAttribute('required', 'required');
+        } else {
+            rifField.classList.add('hidden-rif');
+            rifField.querySelector('input').removeAttribute('required');
+            rifField.querySelector('input').value = '';
+        }
+    }
+
+    document.querySelectorAll('.image-input-group').forEach((group) => {
+        const input = group.querySelector('input[type="file"]');
+        const preview = group.querySelector('.image-preview');
+        const placeholder = group.querySelector('.image-preview-placeholder');
+
+        if (!input || !preview || !placeholder) return;
+
+        const showPreview = (file) => {
+            if (!file || !file.type.startsWith('image/')) {
+                preview.classList.remove('is-visible');
+                preview.removeAttribute('src');
+                placeholder.style.display = 'flex';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                preview.src = event.target.result;
+                preview.classList.add('is-visible');
+                placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        input.addEventListener('change', (event) => {
+            const [file] = event.target.files;
+            showPreview(file);
+        });
+    });
+
+    if (tieneRif) {
+        tieneRif.addEventListener('change', toggleRifField);
+        toggleRifField();
+    }
+</script>
+{% endblock %}
