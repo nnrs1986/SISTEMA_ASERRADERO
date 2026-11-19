@@ -36,6 +36,7 @@ urlpatterns = [
     path('mantenimiento/consumibles/<int:consumible_id>/editar/', views.mantenimiento_consumible_editar_view, name='mantenimiento_consumible_editar'),
     path('mantenimiento/consumibles/<int:consumible_id>/eliminar/', views.mantenimiento_consumible_eliminar_view, name='mantenimiento_consumible_eliminar'),
     path('administrativo/', views.administrativo_view, name='administrativo'),
+    path('administrativo/nomina-y-pagos/', views.nomina_dashboard_view, name='nomina_dashboard'),
     path('guias/', views.guias_view, name='guias'),
     path('permisologia/', views.permisologia_view, name='permisologia'),
     path('personal/', views.personal_view, name='personal'),

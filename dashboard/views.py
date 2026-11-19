@@ -1,6 +1,7 @@
 import json
 import re
 from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -21,9 +22,12 @@ from .condiciones import LogoEmpresa
 from .forms import (
     ActivoMaquinaForm,
     ConfiguracionEmpresaForm,
+    ConfiguracionNominaForm,
     ConsumibleForm,
     HerramientaForm,
     MantenimientoGeneralForm,
+    NominaDetalleForm,
+    NominaPeriodoForm,
     OrdenTrabajoForm,
     PersonalizacionSistemaForm,
     PrestamoHerramientaForm,
@@ -33,9 +37,12 @@ from .models import (
     ActivoMaquina,
     ConfiguracionEmpresa,
     ConfiguracionMantenimiento,
+    ConfiguracionNomina,
     Consumible,
     Herramienta,
     LineaProduccion,
+    NominaDetalle,
+    NominaPeriodo,
     OrdenTrabajo,
     PrestamoHerramienta,
     Trabajador,
@@ -1588,6 +1595,179 @@ def administrativo_view(request):
     """Vista del módulo de Administrativo"""
     context = {'module': 'Administrativo'}
     return render(request, 'modules/administrativo.html', context)
+
+
+def _codigo_nomina(fecha_pago):
+    prefijo = f'NOM-{fecha_pago:%Y%m%d}-'
+    consecutivo = NominaPeriodo.objects.filter(codigo__startswith=prefijo).count() + 1
+    codigo = f'{prefijo}{consecutivo:03d}'
+    while NominaPeriodo.objects.filter(codigo=codigo).exists():
+        consecutivo += 1
+        codigo = f'{prefijo}{consecutivo:03d}'
+    return codigo
+
+
+def _calcular_porcentaje(base, porcentaje):
+    return (base * porcentaje / Decimal('100')).quantize(
+        Decimal('0.01'),
+        rounding=ROUND_HALF_UP,
+    )
+
+
+@login_required(login_url='login')
+@require_http_methods(['GET', 'POST'])
+def nomina_dashboard_view(request):
+    seccion = request.GET.get('seccion', 'nomina')
+    if request.method == 'POST':
+        seccion = request.POST.get('seccion', 'nomina')
+    if seccion not in {'nomina', 'salario', 'deducciones', 'aportes', 'reportes'}:
+        seccion = 'nomina'
+
+    trabajadores = Trabajador.objects.order_by('nombres')
+    periodos = NominaPeriodo.objects.all()
+    trabajador_id = request.GET.get('trabajador')
+    periodo_id = request.GET.get('periodo')
+    if request.method == 'POST':
+        trabajador_id = request.POST.get('trabajador')
+        periodo_id = request.POST.get('periodo') or None
+
+    trabajador = get_object_or_404(trabajadores, pk=trabajador_id) if trabajador_id else None
+    periodo = get_object_or_404(periodos, pk=periodo_id) if periodo_id else None
+    configuracion, _ = ConfiguracionNomina.objects.get_or_create(pk=1)
+
+    if request.method == 'POST' and seccion == 'salario':
+        configuracion_form = ConfiguracionNominaForm(request.POST, instance=configuracion)
+        if configuracion_form.is_valid():
+            configuracion_form.save()
+            messages.success(request, 'La configuración de aportes patronales se guardó correctamente.')
+            return redirect(f"{reverse('nomina_dashboard')}?seccion=salario")
+    else:
+        configuracion_form = ConfiguracionNominaForm(instance=configuracion)
+
+    detalle = None
+    hoy = timezone.localdate()
+    periodo_form = NominaPeriodoForm(
+        instance=periodo,
+        initial={
+            'periodo_desde': hoy,
+            'periodo_hasta': hoy,
+            'fecha_pago': hoy,
+        },
+    )
+    if trabajador and periodo:
+        detalle = NominaDetalle.objects.filter(periodo=periodo, trabajador=trabajador).first()
+    detalle_form = NominaDetalleForm(instance=detalle)
+
+    if request.method == 'POST' and seccion == 'nomina':
+        if not trabajador:
+            messages.error(request, 'Selecciona un trabajador para registrar la nómina.')
+        else:
+            periodo_form = NominaPeriodoForm(request.POST, instance=periodo)
+            detalle_form = NominaDetalleForm(request.POST, instance=detalle)
+            if periodo_form.is_valid() and detalle_form.is_valid():
+                with transaction.atomic():
+                    periodo_guardado = periodo_form.save(commit=False)
+                    if not periodo_guardado.pk:
+                        periodo_guardado.codigo = _codigo_nomina(periodo_guardado.fecha_pago)
+                    periodo_guardado.save()
+
+                    detalle_guardado = detalle_form.save(commit=False)
+                    detalle_guardado.periodo = periodo_guardado
+                    detalle_guardado.trabajador = trabajador
+                    if not detalle_guardado.pk:
+                        detalle_guardado.trabajador_nombre = trabajador.nombres
+                        detalle_guardado.cedula_identidad = trabajador.cedula_identidad
+                        detalle_guardado.cargo = trabajador.cargo
+                        detalle_guardado.area_trabajo = trabajador.area_trabajo
+                        detalle_guardado.departamento = trabajador.departamento
+                        detalle_guardado.seccion = trabajador.seccion
+                        detalle_guardado.tipo_contrato = trabajador.tipo_contrato
+                        detalle_guardado.salario_base = trabajador.salario_contratacion or Decimal('0')
+                        detalle_guardado.ivss_patronal_porcentaje = configuracion.ivss_patronal_porcentaje
+                        detalle_guardado.rpe_patronal_porcentaje = configuracion.rpe_patronal_porcentaje
+                        detalle_guardado.faov_patronal_porcentaje = configuracion.faov_patronal_porcentaje
+                        detalle_guardado.inces_porcentaje = configuracion.inces_porcentaje
+                        detalle_guardado.pensiones_porcentaje = configuracion.pensiones_porcentaje
+                    elif not request.POST.get('numero_cuenta', '').strip():
+                        detalle_guardado.numero_cuenta = detalle.numero_cuenta
+
+                    salario = detalle_guardado.salario_base
+                    detalle_guardado.ivss_deduccion = _calcular_porcentaje(salario, Decimal('4'))
+                    detalle_guardado.rpe_deduccion = _calcular_porcentaje(salario, Decimal('0.5'))
+                    detalle_guardado.faov_deduccion = _calcular_porcentaje(salario, Decimal('1'))
+                    detalle_guardado.ivss_patronal = _calcular_porcentaje(
+                        salario, detalle_guardado.ivss_patronal_porcentaje
+                    )
+                    detalle_guardado.rpe_patronal = _calcular_porcentaje(
+                        salario, detalle_guardado.rpe_patronal_porcentaje
+                    )
+                    detalle_guardado.faov_patronal = _calcular_porcentaje(
+                        salario, detalle_guardado.faov_patronal_porcentaje
+                    )
+                    detalle_guardado.inces = _calcular_porcentaje(
+                        salario, detalle_guardado.inces_porcentaje
+                    )
+                    detalle_guardado.pensiones = _calcular_porcentaje(
+                        salario, detalle_guardado.pensiones_porcentaje
+                    )
+                    detalle_guardado.total_asignaciones = sum(
+                        (
+                            salario,
+                            detalle_guardado.horas_extras,
+                            detalle_guardado.bono_produccion,
+                            detalle_guardado.bono_nocturno,
+                            detalle_guardado.vacaciones,
+                        ),
+                        Decimal('0'),
+                    )
+                    detalle_guardado.total_deducciones = sum(
+                        (
+                            detalle_guardado.ivss_deduccion,
+                            detalle_guardado.rpe_deduccion,
+                            detalle_guardado.faov_deduccion,
+                            detalle_guardado.anticipo_salarial,
+                            detalle_guardado.prestamo_personal,
+                        ),
+                        Decimal('0'),
+                    )
+                    detalle_guardado.neto_pagar = (
+                        detalle_guardado.total_asignaciones
+                        - detalle_guardado.total_deducciones
+                    )
+                    detalle_guardado.total_aportes = sum(
+                        (
+                            detalle_guardado.ivss_patronal,
+                            detalle_guardado.rpe_patronal,
+                            detalle_guardado.faov_patronal,
+                            detalle_guardado.inces,
+                            detalle_guardado.pensiones,
+                        ),
+                        Decimal('0'),
+                    )
+                    detalle_guardado.save()
+                messages.success(
+                    request,
+                    f'La nómina de {trabajador.nombres} quedó guardada bajo {periodo_guardado.codigo}.',
+                )
+                return redirect(
+                    f"{reverse('nomina_dashboard')}?seccion=nomina"
+                    f"&periodo={periodo_guardado.pk}&trabajador={trabajador.pk}"
+                )
+
+    context = {
+        'module': 'Nómina y RRHH',
+        'seccion': seccion,
+        'configuracion': configuracion,
+        'trabajadores': trabajadores,
+        'trabajador_seleccionado': trabajador,
+        'periodos': periodos,
+        'periodo_seleccionado': periodo,
+        'detalle': detalle,
+        'periodo_form': periodo_form,
+        'detalle_form': detalle_form,
+        'configuracion_form': configuracion_form,
+    }
+    return render(request, 'modules/nomina_dashboard.html', context)
 
 
 @login_required(login_url='login')

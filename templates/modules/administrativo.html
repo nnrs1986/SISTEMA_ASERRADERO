@@ -115,7 +115,7 @@
     </section>
 
     <section class="admin-grid" aria-label="Menú administrativo">
-        <button type="button" class="admin-tile" data-target="rrhh">🏢 Nomina y RRHH</button>
+        <a href="{% url 'nomina_dashboard' %}" class="admin-tile">🏢 Nómina y RRHH</a>
         <button type="button" class="admin-tile" data-target="forestal">🌲 Abastecimiento Forestal</button>
         <button type="button" class="admin-tile" data-target="industrial">🏭 Producción Industrial</button>
         <button type="button" class="admin-tile" data-target="mantenimiento">🔧 Mantenimiento</button>
@@ -125,10 +125,6 @@
         <button type="button" class="admin-tile" data-target="servicios">💼 Servicios</button>
         <button type="button" class="admin-tile" data-target="clientes">👥 Clientes</button>
         <button type="button" class="admin-tile" data-target="exportaciones">🌍 Exportaciones</button>
-    </section>
-
-    <section class="admin-panel-shell active" id="panel-rrhh" aria-live="polite">
-        <div class="admin-panel-placeholder">Nomina y RRHH</div>
     </section>
 
     <section class="admin-panel-shell" id="panel-forestal" aria-live="polite">
@@ -170,7 +166,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const tiles = document.querySelectorAll('.admin-tile');
+        const tiles = document.querySelectorAll('button.admin-tile');
         const panels = document.querySelectorAll('.admin-panel-shell');
 
         tiles.forEach((tile) => {

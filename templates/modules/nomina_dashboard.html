@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load l10n %}
+
+{% block title %}Nómina y RRHH - SISTEMA ASERRADERO{% endblock %}
+{% block page_title %}Nómina y RRHH{% endblock %}
+
+{% block content %}
+<style>
+    .payroll-page { display: flex; flex-direction: column; gap: 18px; }
+    .payroll-nav {
+        display: flex; gap: 8px; overflow-x: auto; padding: 8px;
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+    }
+    .payroll-nav a {
+        flex: 0 0 auto; padding: 11px 16px; border-radius: 8px;
+        color: #475569; font-size: 13px; font-weight: 700; text-decoration: none;
+    }
+    .payroll-nav a.active, .payroll-nav a:hover { background: var(--module-start); color: #fff; }
+    .payroll-workspace {
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: start; min-height: 650px; background: #fff;
+        border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden;
+    }
+    .payroll-directory {
+        min-width: 0; padding: 20px; background: #fff;
+        border: 1px solid #e2e8f0; border-radius: 14px;
+    }
+    .payroll-left { min-width: 0; padding: 20px; border-right: 2px solid #dbe3ee; }
+    .payroll-right {
+        display: grid; min-height: 650px; place-items: center; padding: 24px;
+        color: #64748b; text-align: center; background: #f8fafc;
+    }
+    .payroll-right-message { max-width: 320px; }
+    .payroll-right-message strong { display: block; margin-bottom: 8px; color: #334155; font-size: 18px; }
+    .payroll-list-heading, .payroll-card-heading {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; margin-bottom: 13px;
+    }
+    .payroll-list-heading h3, .payroll-card h3 { margin: 0; color: #1e293b; font-size: 16px; }
+    .payroll-list-heading small { color: #64748b; }
+    .payroll-period-picker {
+        display: flex; align-items: end; gap: 10px; margin: 0 0 14px;
+    }
+    .payroll-period-picker .payroll-field { flex: 1; }
+    .payroll-period-picker button {
+        min-height: 38px; padding: 8px 12px; border: 0; border-radius: 7px;
+        color: #fff; background: var(--module-start); font-weight: 700; cursor: pointer;
+    }
+    .payroll-list-scroll { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+    .payroll-list { width: 100%; min-width: 790px; border-collapse: collapse; font-size: 12px; }
+    .payroll-list th, .payroll-list td { padding: 11px 10px; border-bottom: 1px solid #e8edf3; text-align: left; white-space: nowrap; }
+    .payroll-list th { color: #64748b; background: #f8fafc; font-size: 10px; text-transform: uppercase; }
+    .payroll-list tr:last-child td { border-bottom: 0; }
+    .payroll-list tr.selected { background: #eef2ff; }
+    .payroll-list a { color: #334155; font-weight: 600; text-decoration: none; }
+    .payroll-list a:hover { color: var(--module-start); }
+    .payroll-detail { display: grid; gap: 14px; margin-top: 20px; }
+    .payroll-card {
+        min-width: 0; padding: 16px; border: 1px solid #e2e8f0;
+        border-radius: 12px; background: #fff;
+    }
+    .payroll-card-heading { margin-bottom: 12px; }
+    .payroll-card-heading span { color: #64748b; font-size: 11px; }
+    .worker-info { display: flex; align-items: center; gap: 14px; }
+    .worker-photo {
+        width: 62px; height: 62px; flex: 0 0 62px; object-fit: cover;
+        border-radius: 50%; background: #e2e8f0;
+    }
+    .worker-photo-placeholder {
+        display: grid; place-items: center; color: #475569; font-size: 20px; font-weight: 700;
+    }
+    .worker-info h4 { margin: 0 0 5px; color: #1e293b; }
+    .worker-info p { margin: 3px 0; color: #64748b; font-size: 12px; }
+    .payroll-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 14px; }
+    .payroll-field { min-width: 0; }
+    .payroll-field label { display: block; margin-bottom: 5px; color: #475569; font-size: 11px; font-weight: 700; }
+    .payroll-field .form-control {
+        width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid #cbd5e1;
+        border-radius: 7px; color: #1e293b; background: #fff; font: inherit; font-size: 13px;
+    }
+    .payroll-field .form-control:focus { outline: 2px solid rgba(79,70,229,.2); border-color: #6366f1; }
+    .payroll-field .readonly-value {
+        display: flex; min-height: 38px; align-items: center; padding: 8px 10px;
+        border-radius: 7px; color: #334155; background: #f8fafc; font-size: 13px;
+    }
+    .field-error { margin-top: 4px; color: #b91c1c; font-size: 11px; }
+    .payroll-hint { margin-top: 9px; color: #64748b; font-size: 11px; line-height: 1.5; }
+    .payroll-total-row, .payroll-summary-row {
+        display: flex; justify-content: space-between; gap: 12px; padding: 9px 0;
+        border-top: 1px solid #edf1f5; color: #334155; font-size: 13px;
+    }
+    .payroll-total-row strong { color: #0f172a; }
+    .payroll-summary { padding: 14px 16px; border-radius: 12px; color: #fff; background: #1e293b; }
+    .payroll-summary-row { border-color: rgba(255,255,255,.16); color: #e2e8f0; font-size: 15px; }
+    .payroll-summary-row strong { color: #fff; }
+    .payroll-summary-row.net { font-size: 20px; font-weight: 800; }
+    .payroll-submit {
+        width: 100%; min-height: 44px; border: 0; border-radius: 8px;
+        color: #fff; background: var(--module-start); font-size: 14px;
+        font-weight: 700; cursor: pointer;
+    }
+    .payroll-submit:hover { filter: brightness(.94); }
+    .payroll-empty { padding: 18px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; }
+    .payroll-config { max-width: 760px; padding: 22px; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; }
+    .payroll-config h3 { margin-bottom: 8px; color: #1e293b; }
+    .payroll-config p { margin-bottom: 18px; color: #64748b; font-size: 13px; line-height: 1.5; }
+    .payroll-config .payroll-submit { margin-top: 18px; }
+    .payroll-section-placeholder { max-width: 700px; padding: 24px; border: 1px dashed #cbd5e1; border-radius: 12px; color: #64748b; background: #fff; line-height: 1.6; }
+    .payroll-rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .payroll-rate { padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+    .payroll-rate span { display: block; color: #64748b; font-size: 11px; }
+    .payroll-rate strong { display: block; margin-top: 5px; color: #1e293b; font-size: 20px; }
+    @media (max-width: 900px) {
+        .payroll-workspace { grid-template-columns: minmax(0, 1fr); }
+        .payroll-left { border-right: 0; border-bottom: 2px solid #dbe3ee; }
+        .payroll-right { min-height: 260px; }
+    }
+    @media (max-width: 560px) {
+        .payroll-directory { padding: 13px; }
+        .payroll-left { padding: 13px; }
+        .payroll-fields { grid-template-columns: minmax(0, 1fr); }
+        .payroll-nav { margin: 0 -3px; }
+    }
+</style>
+
+<div class="payroll-page">
+    <nav class="payroll-nav" aria-label="Secciones de nómina">
+        <a href="{% url 'nomina_dashboard' %}?seccion=nomina" class="{% if seccion == 'nomina' %}active{% endif %}">Nómina y pagos</a>
+        <a href="{% url 'nomina_dashboard' %}?seccion=salario" class="{% if seccion == 'salario' %}active{% endif %}">Configuración salarial</a>
+        <a href="{% url 'nomina_dashboard' %}?seccion=deducciones" class="{% if seccion == 'deducciones' %}active{% endif %}">Deducciones</a>
+        <a href="{% url 'nomina_dashboard' %}?seccion=aportes" class="{% if seccion == 'aportes' %}active{% endif %}">Aportes patronales</a>
+        <a href="{% url 'nomina_dashboard' %}?seccion=reportes" class="{% if seccion == 'reportes' %}active{% endif %}">Reportes</a>
+    </nav>
+
+    {% if seccion == 'nomina' %}
+    {% if not trabajador_seleccionado %}
+    <section class="payroll-directory">
+        <div class="payroll-list-heading">
+            <h3>Trabajadores de nómina</h3>
+            <small>{{ trabajadores|length }} registrados</small>
+        </div>
+        <form method="get" class="payroll-period-picker">
+            <input type="hidden" name="seccion" value="nomina">
+            <div class="payroll-field">
+                <label for="payroll-period-select">Período guardado</label>
+                <select class="form-control" id="payroll-period-select" name="periodo">
+                    <option value="">Nueva nómina</option>
+                    {% for saved_period in periodos %}
+                    <option value="{{ saved_period.pk }}" {% if periodo_seleccionado.pk == saved_period.pk %}selected{% endif %}>{{ saved_period.codigo }} · {{ saved_period.fecha_pago|date:'d/m/Y' }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Abrir</button>
+        </form>
+        {% if trabajadores %}
+        <div class="payroll-list-scroll">
+            <table class="payroll-list">
+                <thead>
+                    <tr>
+                        <th>Nombre y apellido</th>
+                        <th>Contrato</th>
+                        <th>Área de trabajo</th>
+                        <th>Departamento / sección</th>
+                        <th>Salario de contratación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for persona in trabajadores %}
+                    <tr>
+                        <td><a href="{% url 'nomina_dashboard' %}?seccion=nomina&trabajador={{ persona.pk }}{% if periodo_seleccionado %}&periodo={{ periodo_seleccionado.pk }}{% endif %}">{{ persona.nombres }}</a></td>
+                        <td>{{ persona.tipo_contrato|default:'Sin especificar' }}</td>
+                        <td>{{ persona.area_trabajo|default:'Sin asignar' }}</td>
+                        <td>{{ persona.departamento|default:'-' }}{% if persona.seccion %} / {{ persona.seccion }}{% endif %}</td>
+                        <td>{{ persona.salario_contratacion|default_if_none:'0.00'|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="payroll-empty">No hay trabajadores registrados en el módulo de Personal.</div>
+        {% endif %}
+    </section>
+    {% else %}
+    <div class="payroll-workspace">
+        <section class="payroll-left">
+            <form method="get" class="payroll-period-picker">
+                <input type="hidden" name="seccion" value="nomina">
+                {% if trabajador_seleccionado %}<input type="hidden" name="trabajador" value="{{ trabajador_seleccionado.pk }}">{% endif %}
+                <div class="payroll-field">
+                    <label for="payroll-period-select">Período guardado</label>
+                    <select class="form-control" id="payroll-period-select" name="periodo">
+                        <option value="">Nueva nómina</option>
+                        {% for saved_period in periodos %}
+                        <option value="{{ saved_period.pk }}" {% if periodo_seleccionado.pk == saved_period.pk %}selected{% endif %}>{{ saved_period.codigo }} · {{ saved_period.fecha_pago|date:'d/m/Y' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit">Abrir</button>
+            </form>
+            <form method="post" class="payroll-detail" id="payroll-form">
+                {% csrf_token %}
+                <input type="hidden" name="seccion" value="nomina">
+                <input type="hidden" name="trabajador" value="{{ trabajador_seleccionado.pk }}">
+                {% if periodo_seleccionado %}<input type="hidden" name="periodo" value="{{ periodo_seleccionado.pk }}">{% endif %}
+
+                <section class="payroll-card">
+                    <div class="payroll-card-heading"><h3>Información del trabajador</h3></div>
+                    <div class="worker-info">
+                        {% if trabajador_seleccionado.foto %}
+                            <img class="worker-photo" src="{{ trabajador_seleccionado.foto.url }}" alt="Foto de {{ trabajador_seleccionado.nombres }}">
+                        {% else %}
+                            <div class="worker-photo worker-photo-placeholder" aria-hidden="true">{{ trabajador_seleccionado.nombres|first|upper }}</div>
+                        {% endif %}
+                        <div>
+                            <h4>{{ trabajador_seleccionado.nombres }}</h4>
+                            <p>Cédula: {{ trabajador_seleccionado.cedula_identidad }}</p>
+                            <p>Cargo: {{ trabajador_seleccionado.cargo|default:'Sin especificar' }}</p>
+                            <p>Departamento: {{ trabajador_seleccionado.departamento|default:'Sin especificar' }}</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="payroll-card">
+                    <div class="payroll-card-heading">
+                        <h3>Información del pago</h3>
+                        {% if periodo_seleccionado %}<span>{{ periodo_seleccionado.codigo }}</span>{% else %}<span>Código automático al guardar</span>{% endif %}
+                    </div>
+                    <div class="payroll-fields">
+                        <div class="payroll-field"><label for="{{ periodo_form.periodo_desde.id_for_label }}">Período desde</label>{{ periodo_form.periodo_desde }}{% for error in periodo_form.periodo_desde.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>
+                        <div class="payroll-field"><label for="{{ periodo_form.periodo_hasta.id_for_label }}">Período hasta</label>{{ periodo_form.periodo_hasta }}{% for error in periodo_form.periodo_hasta.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>
+                        <div class="payroll-field"><label for="{{ periodo_form.fecha_pago.id_for_label }}">Fecha de pago</label>{{ periodo_form.fecha_pago }}{% for error in periodo_form.fecha_pago.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>
+                        <div class="payroll-field"><label for="{{ periodo_form.metodo_pago.id_for_label }}">Método de pago</label>{{ periodo_form.metodo_pago }}{% for error in periodo_form.metodo_pago.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>
+                        <div class="payroll-field">
+                            <label for="{{ detalle_form.numero_cuenta.id_for_label }}">Número de cuenta</label>
+                            {% if detalle %}<div class="readonly-value">{{ detalle.numero_cuenta_enmascarado }}</div>{% endif %}
+                            {{ detalle_form.numero_cuenta }}
+                            <div class="payroll-hint">{% if detalle %}Déjala en blanco para conservarla.{% else %}La cuenta se almacenará y se mostrará enmascarada.{% endif %}</div>
+                            {% for error in detalle_form.numero_cuenta.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="payroll-card">
+                    <div class="payroll-card-heading"><h3>Asignaciones (pagos)</h3></div>
+                    <div class="payroll-fields">
+                        <div class="payroll-field"><label>Salario base</label><div class="readonly-value" id="salary-base" data-value="{% if detalle %}{{ detalle.salario_base|unlocalize }}{% else %}{{ trabajador_seleccionado.salario_contratacion|default_if_none:'0'|unlocalize }}{% endif %}">{% if detalle %}{{ detalle.salario_base|floatformat:2 }}{% else %}{{ trabajador_seleccionado.salario_contratacion|default_if_none:'0.00'|floatformat:2 }}{% endif %}</div></div>
+                        {% for field in detalle_form %}
+                            {% if field.name == 'horas_extras' or field.name == 'bono_produccion' or field.name == 'bono_nocturno' or field.name == 'vacaciones' %}
+                            <div class="payroll-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="payroll-total-row"><strong>Total asignaciones</strong><strong id="total-assignments">0.00</strong></div>
+                </section>
+
+                <section class="payroll-card">
+                    <div class="payroll-card-heading"><h3>Deducciones</h3><span>IVSS 4% · RPE 0,5% · FAOV 1%</span></div>
+                    <div class="payroll-fields">
+                        <div class="payroll-field"><label>IVSS (4%)</label><div class="readonly-value calculated-deduction" data-rate="4">{% if detalle %}{{ detalle.ivss_deduccion|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                        <div class="payroll-field"><label>RPE (0,5%)</label><div class="readonly-value calculated-deduction" data-rate="0.5">{% if detalle %}{{ detalle.rpe_deduccion|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                        <div class="payroll-field"><label>FAOV (1%)</label><div class="readonly-value calculated-deduction" data-rate="1">{% if detalle %}{{ detalle.faov_deduccion|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                        {% for field in detalle_form %}
+                            {% if field.name == 'anticipo_salarial' or field.name == 'prestamo_personal' %}
+                            <div class="payroll-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="payroll-total-row"><strong>Total deducciones</strong><strong id="total-deductions">0.00</strong></div>
+                </section>
+
+                <section class="payroll-summary" aria-label="Resumen neto de nómina">
+                    <div class="payroll-summary-row"><span>Total asignaciones</span><strong id="summary-assignments">0.00</strong></div>
+                    <div class="payroll-summary-row"><span>Total deducciones</span><strong id="summary-deductions">0.00</strong></div>
+                    <div class="payroll-summary-row net"><span>Neto a pagar</span><strong id="net-pay">0.00</strong></div>
+                </section>
+
+                <section class="payroll-card">
+                    <div class="payroll-card-heading"><h3>Aportes patronales</h3><span>A cargo de la empresa</span></div>
+                    <div class="payroll-fields">
+                        <div class="payroll-field"><label>IVSS patronal</label><div class="readonly-value employer-contribution" data-rate="{% if detalle %}{{ detalle.ivss_patronal_porcentaje|unlocalize }}{% else %}{{ configuracion.ivss_patronal_porcentaje|unlocalize }}{% endif %}">{% if detalle %}{{ detalle.ivss_patronal|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                        <div class="payroll-field"><label>RPE patronal</label><div class="readonly-value employer-contribution" data-rate="{% if detalle %}{{ detalle.rpe_patronal_porcentaje|unlocalize }}{% else %}{{ configuracion.rpe_patronal_porcentaje|unlocalize }}{% endif %}">{% if detalle %}{{ detalle.rpe_patronal|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                        <div class="payroll-field"><label>FAOV patronal</label><div class="readonly-value employer-contribution" data-rate="{% if detalle %}{{ detalle.faov_patronal_porcentaje|unlocalize }}{% else %}{{ configuracion.faov_patronal_porcentaje|unlocalize }}{% endif %}">{% if detalle %}{{ detalle.faov_patronal|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                        <div class="payroll-field"><label>INCES</label><div class="readonly-value employer-contribution" data-rate="{% if detalle %}{{ detalle.inces_porcentaje|unlocalize }}{% else %}{{ configuracion.inces_porcentaje|unlocalize }}{% endif %}">{% if detalle %}{{ detalle.inces|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                        <div class="payroll-field"><label>Pensiones</label><div class="readonly-value employer-contribution" data-rate="{% if detalle %}{{ detalle.pensiones_porcentaje|unlocalize }}{% else %}{{ configuracion.pensiones_porcentaje|unlocalize }}{% endif %}">{% if detalle %}{{ detalle.pensiones|floatformat:2 }}{% else %}0.00{% endif %}</div></div>
+                    </div>
+                    <div class="payroll-total-row"><strong>Total aportes</strong><strong id="total-contributions">0.00</strong></div>
+                </section>
+                <button class="payroll-submit" type="submit">Guardar nómina</button>
+            </form>
+        </section>
+        <aside class="payroll-right">
+            <div class="payroll-right-message">
+                <strong>Espacio reservado</strong>
+                El lado derecho queda disponible para la siguiente etapa del módulo.
+            </div>
+        </aside>
+    </div>
+    {% endif %}
+    {% elif seccion == 'salario' %}
+    <section class="payroll-config">
+        <h3>Configuración salarial y tasas patronales</h3>
+        <p>Define las tasas que se aplican al salario base para calcular automáticamente los aportes a cargo de la empresa. Las tasas se guardan y se usan en las nóminas futuras.</p>
+        <form method="post">
+            {% csrf_token %}<input type="hidden" name="seccion" value="salario">
+            <div class="payroll-fields">
+                {% for field in configuracion_form %}
+                <div class="payroll-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}</div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="payroll-submit">Guardar configuración</button>
+        </form>
+    </section>
+    {% elif seccion == 'aportes' %}
+    <section class="payroll-config">
+        <h3>Aportes patronales a cargo de la empresa</h3>
+        <p>Estos importes se calculan sobre el salario base con las tasas definidas en Configuración salarial.</p>
+        <div class="payroll-rates">
+            <div class="payroll-rate"><span>IVSS patronal</span><strong>{{ configuracion.ivss_patronal_porcentaje }}%</strong></div>
+            <div class="payroll-rate"><span>RPE patronal</span><strong>{{ configuracion.rpe_patronal_porcentaje }}%</strong></div>
+            <div class="payroll-rate"><span>FAOV patronal</span><strong>{{ configuracion.faov_patronal_porcentaje }}%</strong></div>
+            <div class="payroll-rate"><span>INCES</span><strong>{{ configuracion.inces_porcentaje }}%</strong></div>
+            <div class="payroll-rate"><span>Pensiones</span><strong>{{ configuracion.pensiones_porcentaje }}%</strong></div>
+        </div>
+    </section>
+    {% else %}
+    <section class="payroll-section-placeholder">
+        {% if seccion == 'deducciones' %}
+        <strong>Deducciones de nómina</strong><br>
+        IVSS (4%), RPE (0,5%) y FAOV (1%) se calculan sobre el salario base. Los anticipos salariales y préstamos personales se ingresan en la nómina de cada trabajador.
+        {% else %}
+        <strong>Reportes de nómina</strong><br>
+        Aquí se incorporarán los reportes de períodos y pagos registrados.
+        {% endif %}
+    </section>
+    {% endif %}
+</div>
+
+{% if seccion == 'nomina' and trabajador_seleccionado %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('payroll-form');
+        const salary = Number(document.getElementById('salary-base').dataset.value || 0);
+        const amount = function (name) {
+            const field = form.querySelector('[name="' + name + '"]');
+            return field ? Number(field.value || 0) : 0;
+        };
+        const money = function (value) {
+            return value.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        const round2 = function (value) {
+            return Math.round((value + Number.EPSILON) * 100) / 100;
+        };
+        const updateTotals = function () {
+            const assignments = round2(salary + amount('horas_extras') + amount('bono_produccion')
+                + amount('bono_nocturno') + amount('vacaciones'));
+            const ivss = round2(salary * 0.04);
+            const rpe = round2(salary * 0.005);
+            const faov = round2(salary * 0.01);
+            const deductions = ivss + rpe + faov
+                + amount('anticipo_salarial') + amount('prestamo_personal');
+            document.getElementById('total-assignments').textContent = money(assignments);
+            document.getElementById('total-deductions').textContent = money(deductions);
+            document.getElementById('summary-assignments').textContent = money(assignments);
+            document.getElementById('summary-deductions').textContent = money(deductions);
+            document.getElementById('net-pay').textContent = money(assignments - deductions);
+            document.querySelectorAll('.calculated-deduction').forEach(function (item) {
+                item.textContent = money(round2(salary * Number(item.dataset.rate) / 100));
+            });
+            let contributions = 0;
+            document.querySelectorAll('.employer-contribution').forEach(function (item) {
+                const contribution = round2(salary * Number(item.dataset.rate || 0) / 100);
+                item.textContent = money(contribution);
+                contributions += contribution;
+            });
+            document.getElementById('total-contributions').textContent = money(contributions);
+        };
+        form.addEventListener('input', updateTotals);
+        updateTotals();
+    });
+</script>
+{% endif %}
+{% endblock %}

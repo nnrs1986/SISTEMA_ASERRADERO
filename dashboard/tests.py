@@ -16,12 +16,16 @@ from .models import (
     ActivoMaquina,
     ConfiguracionEmpresa,
     ConfiguracionMantenimiento,
+    ConfiguracionNomina,
     Consumible,
     Herramienta,
     LineaProduccion,
+    NominaDetalle,
+    NominaPeriodo,
     OrdenTrabajo,
     PerfilUsuario,
     PrestamoHerramienta,
+    Trabajador,
 )
 
 
@@ -427,6 +431,10 @@ class MantenimientoFinancieroViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Visión ejecutiva')
+        self.assertContains(
+            response,
+            'background: linear-gradient(135deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%)',
+        )
         self.assertContains(response, 'Costo total de mantenimiento')
         self.assertContains(response, 'Costo de mantenimiento / RAV')
         self.assertContains(response, 'Costo por hora de parada')
@@ -1171,3 +1179,178 @@ class MantenimientoPrestamosHerramientasViewTests(TestCase):
         )
         self.assertTrue(response.context['sku_no_encontrado'])
         self.assertFalse(PrestamoHerramienta.objects.exists())
+
+
+class NominaDashboardTests(TestCase):
+    def setUp(self):
+        usuario = get_user_model().objects.create_user(
+            username='nomina',
+            password='clave-segura',
+        )
+        self.client.force_login(usuario)
+        self.trabajador = Trabajador.objects.create(
+            nombres='Ana Pérez',
+            cedula_identidad='V-12345678',
+            fecha_nacimiento='1990-01-01',
+            tipo_contrato='indeterminado',
+            area_trabajo='Aserrío',
+            departamento='Producción',
+            seccion='Línea 1',
+            cargo='Operadora',
+            salario_contratacion=Decimal('1000.00'),
+        )
+
+    def test_listado_completo_y_dashboard_del_trabajador_seleccionado(self):
+        administrativo = self.client.get(reverse('administrativo'))
+        self.assertContains(administrativo, reverse('nomina_dashboard'))
+
+        listado = self.client.get(
+            f"{reverse('nomina_dashboard')}?seccion=nomina"
+        )
+        self.assertEqual(listado.status_code, 200)
+        self.assertContains(listado, '<section class="payroll-directory">')
+        self.assertContains(listado, 'Nombre y apellido')
+        self.assertNotContains(listado, '<div class="payroll-workspace">')
+
+        response = self.client.get(
+            f"{reverse('nomina_dashboard')}?trabajador={self.trabajador.pk}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nómina y pagos')
+        self.assertContains(response, 'Configuración salarial')
+        self.assertContains(response, '<div class="payroll-workspace">')
+        self.assertNotContains(response, '<section class="payroll-directory">')
+        self.assertContains(response, 'Ana Pérez')
+        self.assertEqual(
+            response.context['trabajador_seleccionado'].salario_contratacion,
+            Decimal('1000.00'),
+        )
+        self.assertContains(response, 'Información del trabajador')
+        self.assertContains(response, 'Espacio reservado')
+
+    def test_guarda_nomina_y_calcula_totales_en_el_periodo(self):
+        ConfiguracionNomina.objects.create(
+            ivss_patronal_porcentaje=Decimal('10.00'),
+            rpe_patronal_porcentaje=Decimal('2.00'),
+            faov_patronal_porcentaje=Decimal('1.00'),
+            inces_porcentaje=Decimal('0.50'),
+            pensiones_porcentaje=Decimal('1.50'),
+        )
+        response = self.client.post(
+            reverse('nomina_dashboard'),
+            {
+                'seccion': 'nomina',
+                'trabajador': self.trabajador.pk,
+                'periodo_desde': '2026-11-01',
+                'periodo_hasta': '2026-11-15',
+                'fecha_pago': '2026-11-17',
+                'metodo_pago': 'transferencia',
+                'horas_extras': '100.00',
+                'bono_produccion': '50.00',
+                'bono_nocturno': '25.00',
+                'vacaciones': '10.00',
+                'anticipo_salarial': '15.00',
+                'prestamo_personal': '20.00',
+                'numero_cuenta': '0123456789012345',
+            },
+        )
+
+        periodo = NominaPeriodo.objects.get()
+        detalle = NominaDetalle.objects.get()
+        self.assertRedirects(
+            response,
+            f"{reverse('nomina_dashboard')}?seccion=nomina"
+            f"&periodo={periodo.pk}&trabajador={self.trabajador.pk}",
+        )
+        self.assertEqual(periodo.codigo, 'NOM-20261117-001')
+        self.assertEqual(detalle.salario_base, Decimal('1000.00'))
+        self.assertEqual(detalle.total_asignaciones, Decimal('1185.00'))
+        self.assertEqual(detalle.ivss_deduccion, Decimal('40.00'))
+        self.assertEqual(detalle.rpe_deduccion, Decimal('5.00'))
+        self.assertEqual(detalle.faov_deduccion, Decimal('10.00'))
+        self.assertEqual(detalle.total_deducciones, Decimal('90.00'))
+        self.assertEqual(detalle.neto_pagar, Decimal('1095.00'))
+        self.assertEqual(detalle.total_aportes, Decimal('150.00'))
+        self.assertEqual(detalle.ivss_patronal_porcentaje, Decimal('10.00'))
+        self.assertEqual(detalle.numero_cuenta_enmascarado, '************2345')
+
+        dashboard = self.client.get(response.url)
+        self.assertContains(dashboard, periodo.codigo)
+        self.assertContains(dashboard, '2345')
+        self.assertNotContains(dashboard, '0123456789012345')
+
+        otro_trabajador = Trabajador.objects.create(
+            nombres='Luis Gómez',
+            cedula_identidad='V-87654321',
+            fecha_nacimiento='1988-02-02',
+            codigo_trabajador='TEST-002',
+            salario_contratacion=Decimal('800.00'),
+        )
+        segunda_nomina = self.client.post(
+            reverse('nomina_dashboard'),
+            {
+                'seccion': 'nomina',
+                'periodo': periodo.pk,
+                'trabajador': otro_trabajador.pk,
+                'periodo_desde': '2026-11-01',
+                'periodo_hasta': '2026-11-15',
+                'fecha_pago': '2026-11-17',
+                'metodo_pago': 'transferencia',
+                'horas_extras': '0',
+                'bono_produccion': '0',
+                'bono_nocturno': '0',
+                'vacaciones': '0',
+                'anticipo_salarial': '0',
+                'prestamo_personal': '0',
+                'numero_cuenta': '',
+            },
+        )
+        self.assertEqual(segunda_nomina.status_code, 302)
+        self.assertEqual(periodo.detalles.count(), 2)
+
+    def test_no_guarda_periodo_si_fechas_no_son_validas(self):
+        response = self.client.post(
+            reverse('nomina_dashboard'),
+            {
+                'seccion': 'nomina',
+                'trabajador': self.trabajador.pk,
+                'periodo_desde': '2026-11-16',
+                'periodo_hasta': '2026-11-01',
+                'fecha_pago': '2026-11-17',
+                'metodo_pago': 'transferencia',
+                'horas_extras': '0',
+                'bono_produccion': '0',
+                'bono_nocturno': '0',
+                'vacaciones': '0',
+                'anticipo_salarial': '0',
+                'prestamo_personal': '0',
+                'numero_cuenta': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'La fecha final debe ser igual o posterior a la inicial.')
+        self.assertFalse(NominaPeriodo.objects.exists())
+        self.assertFalse(NominaDetalle.objects.exists())
+
+    def test_configuracion_salarial_guarda_tasas_patronales(self):
+        response = self.client.post(
+            f"{reverse('nomina_dashboard')}?seccion=salario",
+            {
+                'seccion': 'salario',
+                'ivss_patronal_porcentaje': '10',
+                'rpe_patronal_porcentaje': '2',
+                'faov_patronal_porcentaje': '1',
+                'inces_porcentaje': '0.5',
+                'pensiones_porcentaje': '1.5',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('nomina_dashboard')}?seccion=salario",
+        )
+        configuracion = ConfiguracionNomina.objects.get(pk=1)
+        self.assertEqual(configuracion.ivss_patronal_porcentaje, Decimal('10.00'))
+        self.assertEqual(configuracion.pensiones_porcentaje, Decimal('1.50'))

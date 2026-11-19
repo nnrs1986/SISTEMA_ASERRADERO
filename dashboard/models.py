@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -687,3 +687,137 @@ class Trabajador(models.Model):
 
     def __str__(self):
         return self.nombres
+
+
+class ConfiguracionNomina(models.Model):
+    ivss_patronal_porcentaje = models.DecimalField(
+        'IVSS patronal (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    rpe_patronal_porcentaje = models.DecimalField(
+        'RPE patronal (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    faov_patronal_porcentaje = models.DecimalField(
+        'FAOV patronal (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    inces_porcentaje = models.DecimalField(
+        'INCES (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    pensiones_porcentaje = models.DecimalField(
+        'Pensiones (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+
+    class Meta:
+        verbose_name = 'configuración de nómina'
+        verbose_name_plural = 'configuración de nómina'
+
+
+class NominaPeriodo(models.Model):
+    METODOS_PAGO = [
+        ('transferencia', 'Transferencia'),
+        ('efectivo', 'Efectivo'),
+        ('cheque', 'Cheque'),
+        ('otro', 'Otro'),
+    ]
+
+    codigo = models.CharField('Código de nómina', max_length=24, unique=True)
+    periodo_desde = models.DateField('Período desde')
+    periodo_hasta = models.DateField('Período hasta')
+    fecha_pago = models.DateField('Fecha de pago')
+    metodo_pago = models.CharField(
+        'Método de pago',
+        max_length=20,
+        choices=METODOS_PAGO,
+        default='transferencia',
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha_pago', '-pk']
+        verbose_name = 'período de nómina'
+        verbose_name_plural = 'períodos de nómina'
+
+    def __str__(self):
+        return self.codigo
+
+
+class NominaDetalle(models.Model):
+    periodo = models.ForeignKey(
+        NominaPeriodo,
+        on_delete=models.PROTECT,
+        related_name='detalles',
+    )
+    trabajador = models.ForeignKey(
+        Trabajador,
+        on_delete=models.PROTECT,
+        related_name='nominas',
+    )
+    trabajador_nombre = models.CharField('Nombre del trabajador', max_length=120)
+    cedula_identidad = models.CharField('Cédula', max_length=20)
+    cargo = models.CharField('Cargo', max_length=120, blank=True)
+    area_trabajo = models.CharField('Área de trabajo', max_length=100, blank=True)
+    departamento = models.CharField('Departamento', max_length=100, blank=True)
+    seccion = models.CharField('Sección', max_length=100, blank=True)
+    tipo_contrato = models.CharField('Contrato', max_length=30, blank=True)
+    salario_base = models.DecimalField('Salario base', max_digits=12, decimal_places=2, default=0)
+    horas_extras = models.DecimalField('Horas extras', max_digits=12, decimal_places=2, default=0)
+    bono_produccion = models.DecimalField('Bono de producción', max_digits=12, decimal_places=2, default=0)
+    bono_nocturno = models.DecimalField('Bono nocturno', max_digits=12, decimal_places=2, default=0)
+    vacaciones = models.DecimalField('Vacaciones', max_digits=12, decimal_places=2, default=0)
+    total_asignaciones = models.DecimalField('Total asignaciones', max_digits=12, decimal_places=2, default=0)
+    ivss_deduccion = models.DecimalField('IVSS trabajador', max_digits=12, decimal_places=2, default=0)
+    rpe_deduccion = models.DecimalField('RPE trabajador', max_digits=12, decimal_places=2, default=0)
+    faov_deduccion = models.DecimalField('FAOV trabajador', max_digits=12, decimal_places=2, default=0)
+    anticipo_salarial = models.DecimalField('Anticipo salarial', max_digits=12, decimal_places=2, default=0)
+    prestamo_personal = models.DecimalField('Préstamo personal', max_digits=12, decimal_places=2, default=0)
+    total_deducciones = models.DecimalField('Total deducciones', max_digits=12, decimal_places=2, default=0)
+    neto_pagar = models.DecimalField('Neto a pagar', max_digits=12, decimal_places=2, default=0)
+    numero_cuenta = models.CharField('Número de cuenta', max_length=40, blank=True)
+    ivss_patronal = models.DecimalField('IVSS patronal', max_digits=12, decimal_places=2, default=0)
+    rpe_patronal = models.DecimalField('RPE patronal', max_digits=12, decimal_places=2, default=0)
+    faov_patronal = models.DecimalField('FAOV patronal', max_digits=12, decimal_places=2, default=0)
+    inces = models.DecimalField('INCES', max_digits=12, decimal_places=2, default=0)
+    pensiones = models.DecimalField('Pensiones', max_digits=12, decimal_places=2, default=0)
+    ivss_patronal_porcentaje = models.DecimalField('Tasa IVSS patronal (%)', max_digits=5, decimal_places=2, default=0)
+    rpe_patronal_porcentaje = models.DecimalField('Tasa RPE patronal (%)', max_digits=5, decimal_places=2, default=0)
+    faov_patronal_porcentaje = models.DecimalField('Tasa FAOV patronal (%)', max_digits=5, decimal_places=2, default=0)
+    inces_porcentaje = models.DecimalField('Tasa INCES (%)', max_digits=5, decimal_places=2, default=0)
+    pensiones_porcentaje = models.DecimalField('Tasa pensiones (%)', max_digits=5, decimal_places=2, default=0)
+    total_aportes = models.DecimalField('Total aportes patronales', max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ['trabajador_nombre']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['periodo', 'trabajador'],
+                name='nomina_periodo_trabajador_unico',
+            ),
+        ]
+        verbose_name = 'detalle de nómina'
+        verbose_name_plural = 'detalles de nómina'
+
+    @property
+    def numero_cuenta_enmascarado(self):
+        digitos = ''.join(caracter for caracter in self.numero_cuenta if caracter.isdigit())
+        if not digitos:
+            return 'Sin registrar'
+        return f'{"*" * max(len(digitos) - 4, 0)}{digitos[-4:]}'

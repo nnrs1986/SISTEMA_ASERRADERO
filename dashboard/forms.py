@@ -1,13 +1,17 @@
 import json
 
 from django import forms
+from django.core.validators import MinValueValidator
 
 from .condiciones import LogoEmpresa
 from .models import (
     ConfiguracionEmpresa,
     ConfiguracionMantenimiento,
+    ConfiguracionNomina,
     Consumible,
     Herramienta,
+    NominaDetalle,
+    NominaPeriodo,
     OrdenTrabajo,
     Trabajador,
 )
@@ -32,6 +36,83 @@ def validar_imagen_logo(archivo):
     archivo.seek(0)
     if not validar_contenido(contenido):
         raise forms.ValidationError('El archivo no contiene una imagen válida para su formato.')
+
+
+class NominaPeriodoForm(forms.ModelForm):
+    class Meta:
+        model = NominaPeriodo
+        fields = ('periodo_desde', 'periodo_hasta', 'fecha_pago', 'metodo_pago')
+        widgets = {
+            'periodo_desde': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'periodo_hasta': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_pago': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'metodo_pago': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        desde = cleaned_data.get('periodo_desde')
+        hasta = cleaned_data.get('periodo_hasta')
+        if desde and hasta and desde > hasta:
+            self.add_error('periodo_hasta', 'La fecha final debe ser igual o posterior a la inicial.')
+        return cleaned_data
+
+
+class NominaDetalleForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in (
+            'horas_extras',
+            'bono_produccion',
+            'bono_nocturno',
+            'vacaciones',
+            'anticipo_salarial',
+            'prestamo_personal',
+        ):
+            self.fields[field_name].validators.append(MinValueValidator(0))
+
+    class Meta:
+        model = NominaDetalle
+        fields = (
+            'horas_extras',
+            'bono_produccion',
+            'bono_nocturno',
+            'vacaciones',
+            'anticipo_salarial',
+            'prestamo_personal',
+            'numero_cuenta',
+        )
+        widgets = {
+            'horas_extras': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'bono_produccion': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'bono_nocturno': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'vacaciones': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'anticipo_salarial': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'prestamo_personal': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'numero_cuenta': forms.PasswordInput(
+                attrs={'class': 'form-control', 'autocomplete': 'new-password'},
+                render_value=False,
+            ),
+        }
+
+
+class ConfiguracionNominaForm(forms.ModelForm):
+    class Meta:
+        model = ConfiguracionNomina
+        fields = (
+            'ivss_patronal_porcentaje',
+            'rpe_patronal_porcentaje',
+            'faov_patronal_porcentaje',
+            'inces_porcentaje',
+            'pensiones_porcentaje',
+        )
+        widgets = {
+            'ivss_patronal_porcentaje': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'rpe_patronal_porcentaje': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'faov_patronal_porcentaje': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'inces_porcentaje': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'pensiones_porcentaje': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+        }
 
 
 class ConfiguracionEmpresaForm(forms.ModelForm):
