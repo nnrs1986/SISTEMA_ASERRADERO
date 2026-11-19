@@ -1597,6 +1597,17 @@ def administrativo_view(request):
     return render(request, 'modules/administrativo.html', context)
 
 
+@login_required(login_url='login')
+def abastecimiento_forestal_view(request):
+    seccion = request.GET.get('seccion', 'compras')
+    if seccion not in {'compras', 'recepciones', 'pagos', 'reportes'}:
+        seccion = 'compras'
+    return render(request, 'modules/abastecimiento_forestal.html', {
+        'module': 'Compras de madera',
+        'seccion': seccion,
+    })
+
+
 def _codigo_nomina(fecha_pago):
     prefijo = f'NOM-{fecha_pago:%Y%m%d}-'
     consecutivo = NominaPeriodo.objects.filter(codigo__startswith=prefijo).count() + 1

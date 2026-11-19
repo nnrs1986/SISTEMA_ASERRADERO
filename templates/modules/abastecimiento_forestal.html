@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Compras de madera - SISTEMA ASERRADERO{% endblock %}
+{% block page_title %}Abastecimiento Forestal{% endblock %}
+
+{% block content %}
+<style>
+    .forest-page { display: flex; flex-direction: column; gap: 18px; }
+    .forest-hero {
+        position: relative; overflow: hidden; padding: 27px 30px; border-radius: 15px;
+        color: #fff; background: linear-gradient(120deg, var(--sidebar-start), var(--sidebar-end));
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .12);
+    }
+    .forest-hero::after {
+        position: absolute; top: -72px; right: -25px; width: 235px; height: 235px;
+        border: 1px solid rgba(255,255,255,.16); border-radius: 50%; content: "";
+        box-shadow: 0 0 0 28px rgba(255,255,255,.045), 0 0 0 58px rgba(255,255,255,.035);
+    }
+    .forest-hero-copy { position: relative; z-index: 1; }
+    .forest-eyebrow { margin-bottom: 7px; color: rgba(255,255,255,.78); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .forest-hero h3 { margin: 0; color: #fff; font-size: clamp(24px, 3vw, 32px); letter-spacing: -.03em; }
+    .forest-hero p { margin: 7px 0 0; color: rgba(255,255,255,.84); font-size: 13px; }
+    .forest-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+    .forest-kpi, .forest-panel {
+        min-width: 0; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .035);
+    }
+    .forest-kpi { position: relative; padding: 17px 18px; }
+    .forest-kpi::before { position: absolute; top: 16px; bottom: 16px; left: 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--module-start); content: ""; }
+    .forest-kpi-label { display: block; color: #64748b; font-size: 11px; font-weight: 700; }
+    .forest-kpi-value { display: block; margin-top: 9px; color: #172033; font-size: clamp(20px, 2.2vw, 27px); font-weight: 800; letter-spacing: -.04em; }
+    .forest-kpi-note { display: block; margin-top: 4px; color: #94a3b8; font-size: 10px; }
+    .forest-tabs { display: flex; gap: 5px; overflow-x: auto; padding: 6px; border: 1px solid #e2e8f0; border-radius: 11px; background: #fff; }
+    .forest-tab { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 7px; color: #64748b; font-size: 12px; font-weight: 700; text-decoration: none; transition: background .15s, color .15s; }
+    .forest-tab:hover { color: var(--module-start); background: #f1f5f9; }
+    .forest-tab.active { color: #fff; background: var(--module-start); }
+    .forest-tab-count { display: inline-grid; min-width: 19px; height: 19px; place-items: center; padding: 0 5px; border-radius: 10px; color: inherit; background: rgba(148,163,184,.16); font-size: 10px; }
+    .forest-tab.active .forest-tab-count { background: rgba(255,255,255,.2); }
+    .forest-panel { padding: 20px; }
+    .forest-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+    .forest-panel-heading h4 { margin: 0; color: #172033; font-size: 16px; }
+    .forest-panel-heading p { margin: 5px 0 0; color: #64748b; font-size: 11px; line-height: 1.5; }
+    .forest-period { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid #e2e8f0; border-radius: 7px; color: #64748b; background: #f8fafc; font-size: 10px; white-space: nowrap; }
+    .forest-table-scroll { overflow-x: auto; border: 1px solid #e8edf3; border-radius: 9px; }
+    .forest-table { width: 100%; min-width: 810px; border-collapse: collapse; font-size: 11px; }
+    .forest-table th { padding: 11px 12px; color: #64748b; background: #f8fafc; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-align: left; text-transform: uppercase; white-space: nowrap; }
+    .forest-table td { padding: 12px; border-top: 1px solid #edf1f5; color: #475569; }
+    .forest-empty { padding: 34px 15px; color: #64748b; text-align: center; }
+    .forest-empty-icon { display: grid; width: 42px; height: 42px; place-items: center; margin: 0 auto 10px; border-radius: 12px; color: var(--module-start); background: color-mix(in srgb, var(--module-start) 9%, white); font-size: 20px; }
+    .forest-empty strong { display: block; margin-bottom: 5px; color: #334155; font-size: 12px; }
+    .forest-empty span { display: block; font-size: 11px; line-height: 1.5; }
+    .forest-analytics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+    .forest-analytics .forest-panel { min-height: 205px; padding: 17px; }
+    .forest-chart-empty { display: grid; min-height: 100px; place-items: center; color: #94a3b8; font-size: 11px; text-align: center; }
+    .forest-chart-empty span { display: block; margin-top: 5px; color: #cbd5e1; font-size: 10px; }
+    .forest-debt-total { margin: 17px 0 12px; color: #172033; font-size: 24px; font-weight: 800; letter-spacing: -.04em; }
+    .forest-debt-total small { color: #64748b; font-size: 11px; font-weight: 500; letter-spacing: 0; }
+    .forest-detail-button { min-height: 34px; padding: 7px 11px; border: 1px solid #dbe3eb; border-radius: 7px; color: #334155; background: #fff; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+    .forest-detail-button:hover { border-color: var(--module-start); color: var(--module-start); }
+    .forest-tab:focus-visible, .forest-detail-button:focus-visible, .forest-modal-close:focus-visible { outline: 3px solid rgba(79,70,229,.25); outline-offset: 2px; }
+    .forest-modal[hidden] { display: none; }
+    .forest-modal { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(15,23,42,.52); }
+    .forest-modal-card { width: min(460px, 100%); padding: 22px; border-radius: 13px; background: #fff; box-shadow: 0 24px 60px rgba(15,23,42,.25); }
+    .forest-modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .forest-modal-heading h4 { margin: 0; color: #172033; font-size: 16px; }
+    .forest-modal-close { display: grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: 7px; color: #64748b; background: #f1f5f9; font-size: 18px; cursor: pointer; }
+    .forest-modal-card p { margin: 14px 0 0; color: #64748b; font-size: 12px; line-height: 1.6; }
+    .forest-placeholder { display: grid; min-height: 200px; place-items: center; padding: 25px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; background: #f8fafc; text-align: center; }
+    .forest-placeholder strong { display: block; margin-bottom: 7px; color: #334155; font-size: 14px; }
+    .forest-placeholder span { max-width: 420px; font-size: 11px; line-height: 1.6; }
+    @media (max-width: 900px) { .forest-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .forest-analytics { grid-template-columns: 1fr; } .forest-analytics .forest-panel { min-height: 170px; } }
+    @media (max-width: 560px) { .forest-hero { padding: 21px; } .forest-kpi { padding: 14px; } .forest-panel { padding: 15px; } .forest-panel-heading { flex-direction: column; } .forest-tabs { margin: 0 -3px; } }
+</style>
+
+<main class="forest-page">
+    <header class="forest-hero">
+        <div class="forest-hero-copy">
+            <div class="forest-eyebrow">Abastecimiento forestal</div>
+            <h3>Compras de madera</h3>
+            <p>Control de compras, recepciones y compromisos con proveedores.</p>
+        </div>
+    </header>
+
+    <section class="forest-kpis" aria-label="Resumen de compras de madera">
+        <article class="forest-kpi">
+            <span class="forest-kpi-label">Compras del mes</span>
+            <strong class="forest-kpi-value">0</strong>
+            <span class="forest-kpi-note">Órdenes registradas este mes</span>
+        </article>
+        <article class="forest-kpi">
+            <span class="forest-kpi-label">Volumen comprado</span>
+            <strong class="forest-kpi-value">0 <small>m³</small></strong>
+            <span class="forest-kpi-note">Volumen total de las compras</span>
+        </article>
+        <article class="forest-kpi">
+            <span class="forest-kpi-label">Volumen recibido</span>
+            <strong class="forest-kpi-value">0 <small>m³</small></strong>
+            <span class="forest-kpi-note">Madera recibida en planta</span>
+        </article>
+        <article class="forest-kpi">
+            <span class="forest-kpi-label">Costo promedio</span>
+            <strong class="forest-kpi-value">0,00 <small>/ m³</small></strong>
+            <span class="forest-kpi-note">Costo promedio por volumen</span>
+        </article>
+    </section>
+
+    <nav class="forest-tabs" aria-label="Secciones de abastecimiento forestal">
+        <a class="forest-tab{% if seccion == 'compras' %} active{% endif %}" href="{% url 'abastecimiento_forestal' %}?seccion=compras" {% if seccion == 'compras' %}aria-current="page"{% endif %}>Compras <span class="forest-tab-count">0</span></a>
+        <a class="forest-tab{% if seccion == 'recepciones' %} active{% endif %}" href="{% url 'abastecimiento_forestal' %}?seccion=recepciones" {% if seccion == 'recepciones' %}aria-current="page"{% endif %}>Recepciones</a>
+        <a class="forest-tab{% if seccion == 'pagos' %} active{% endif %}" href="{% url 'abastecimiento_forestal' %}?seccion=pagos" {% if seccion == 'pagos' %}aria-current="page"{% endif %}>Pagos</a>
+        <a class="forest-tab{% if seccion == 'reportes' %} active{% endif %}" href="{% url 'abastecimiento_forestal' %}?seccion=reportes" {% if seccion == 'reportes' %}aria-current="page"{% endif %}>Reportes</a>
+    </nav>
+
+    {% if seccion == 'compras' %}
+    <section class="forest-panel" aria-labelledby="forest-purchases-title">
+        <div class="forest-panel-heading">
+            <div>
+                <h4 id="forest-purchases-title">Listado de compras</h4>
+                <p>Consulta el detalle, estado y documentos de cada compra de madera.</p>
+            </div>
+            <span class="forest-period"><span aria-hidden="true">◷</span> Mes actual</span>
+        </div>
+        <div class="forest-table-scroll">
+            <table class="forest-table">
+                <thead>
+                    <tr>
+                        <th>N.º de compra</th><th>Fecha</th><th>Proveedor</th><th>Especie</th>
+                        <th>Volumen</th><th>Costo total</th><th>Estado</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="8">
+                            <div class="forest-empty">
+                                <span class="forest-empty-icon" aria-hidden="true">▤</span>
+                                <strong>Aún no hay compras registradas</strong>
+                                <span>Cuando se registren compras, aquí podrás consultar su volumen, costo, estado y documentos.</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="forest-analytics" aria-label="Estadísticas de abastecimiento">
+        <article class="forest-panel">
+            <div class="forest-panel-heading"><div><h4>Compras por especie</h4><p>Volumen comprado por tipo de madera.</p></div></div>
+            <div class="forest-chart-empty">Sin compras para mostrar<span>El gráfico estará disponible al registrar compras.</span></div>
+        </article>
+        <article class="forest-panel">
+            <div class="forest-panel-heading"><div><h4>Costo por m³</h4><p>Comparativo de costos por especie.</p></div></div>
+            <div class="forest-chart-empty">Sin costos para mostrar<span>El comparativo estará disponible al registrar compras.</span></div>
+        </article>
+        <article class="forest-panel">
+            <div class="forest-panel-heading"><div><h4>Deudas con proveedores</h4><p>Saldo pendiente de pago.</p></div></div>
+            <div class="forest-debt-total">0,00 <small>pendiente</small></div>
+            <button type="button" class="forest-detail-button" data-debt-details>Ver detalles</button>
+        </article>
+    </section>
+    {% else %}
+    <section class="forest-panel" aria-live="polite">
+        <div class="forest-panel-heading">
+            <div>
+                <h4>{% if seccion == 'recepciones' %}Recepciones{% elif seccion == 'pagos' %}Pagos a proveedores{% else %}Reportes de abastecimiento{% endif %}</h4>
+                <p>Información vinculada a las compras de madera.</p>
+            </div>
+        </div>
+        <div class="forest-placeholder">
+            <div><strong>{% if seccion == 'recepciones' %}Aún no hay recepciones registradas{% elif seccion == 'pagos' %}Aún no hay pagos registrados{% else %}Aún no hay reportes disponibles{% endif %}</strong>
+            <span>Esta sección mostrará información cuando se registren compras y movimientos de abastecimiento forestal.</span></div>
+        </div>
+    </section>
+    {% endif %}
+</main>
+
+<div class="forest-modal" data-debt-modal hidden>
+    <section class="forest-modal-card" role="dialog" aria-modal="true" aria-labelledby="forest-debt-modal-title">
+        <div class="forest-modal-heading">
+            <h4 id="forest-debt-modal-title">Deudas con proveedores</h4>
+            <button type="button" class="forest-modal-close" data-close-debt-modal aria-label="Cerrar">×</button>
+        </div>
+        <p>No hay saldos pendientes. El desglose por proveedor aparecerá cuando existan compras y pagos registrados.</p>
+    </section>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.querySelector('[data-debt-modal]');
+        const openButton = document.querySelector('[data-debt-details]');
+        const closeButton = document.querySelector('[data-close-debt-modal]');
+        if (!modal || !openButton || !closeButton) return;
+
+        function closeModal() {
+            modal.hidden = true;
+            openButton.focus();
+        }
+
+        openButton.addEventListener('click', function () {
+            modal.hidden = false;
+            closeButton.focus();
+        });
+        closeButton.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !modal.hidden) closeModal();
+        });
+    });
+</script>
+{% endblock %}

@@ -116,7 +116,7 @@
 
     <section class="admin-grid" aria-label="Menú administrativo">
         <a href="{% url 'nomina_dashboard' %}" class="admin-tile">🏢 Nómina y RRHH</a>
-        <button type="button" class="admin-tile" data-target="forestal">🌲 Abastecimiento Forestal</button>
+        <a href="{% url 'abastecimiento_forestal' %}" class="admin-tile">🌲 Abastecimiento Forestal</a>
         <button type="button" class="admin-tile" data-target="industrial">🏭 Producción Industrial</button>
         <button type="button" class="admin-tile" data-target="mantenimiento">🔧 Mantenimiento</button>
         <button type="button" class="admin-tile" data-target="inventario">📦 Inventario y Almacén</button>
@@ -125,10 +125,6 @@
         <button type="button" class="admin-tile" data-target="servicios">💼 Servicios</button>
         <button type="button" class="admin-tile" data-target="clientes">👥 Clientes</button>
         <button type="button" class="admin-tile" data-target="exportaciones">🌍 Exportaciones</button>
-    </section>
-
-    <section class="admin-panel-shell" id="panel-forestal" aria-live="polite">
-        <div class="admin-panel-placeholder">Abastecimiento Forestal</div>
     </section>
 
     <section class="admin-panel-shell" id="panel-industrial" aria-live="polite">

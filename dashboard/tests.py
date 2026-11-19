@@ -1229,6 +1229,7 @@ class NominaDashboardTests(TestCase):
         self.assertContains(response, 'Información del trabajador')
         self.assertContains(response, 'Espacio reservado')
 
+
     def test_guarda_nomina_y_calcula_totales_en_el_periodo(self):
         ConfiguracionNomina.objects.create(
             ivss_patronal_porcentaje=Decimal('10.00'),
@@ -1354,3 +1355,55 @@ class NominaDashboardTests(TestCase):
         configuracion = ConfiguracionNomina.objects.get(pk=1)
         self.assertEqual(configuracion.ivss_patronal_porcentaje, Decimal('10.00'))
         self.assertEqual(configuracion.pensiones_porcentaje, Decimal('1.50'))
+
+
+class AbastecimientoForestalTests(TestCase):
+    def setUp(self):
+        usuario = get_user_model().objects.create_user(
+            username='abastecimiento',
+            password='clave-segura',
+        )
+        self.client.force_login(usuario)
+
+    def test_dashboard_muestra_resumen_vacio_y_enlace_desde_administrativo(self):
+        administrativo = self.client.get(reverse('administrativo'))
+        self.assertContains(
+            administrativo,
+            reverse('abastecimiento_forestal'),
+        )
+
+        response = self.client.get(reverse('abastecimiento_forestal'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Compras de madera')
+        self.assertContains(response, 'Compras del mes')
+        self.assertContains(response, 'Volumen comprado')
+        self.assertContains(response, 'Volumen recibido')
+        self.assertContains(response, 'Costo promedio')
+        self.assertContains(response, 'Aún no hay compras registradas')
+        self.assertContains(response, 'Compras por especie')
+        self.assertContains(response, 'Costo por m³')
+        self.assertContains(response, 'Deudas con proveedores')
+
+    def test_pestanas_muestran_seccion_y_rechazan_secciones_desconocidas(self):
+        for seccion, titulo in (
+            ('recepciones', 'Aún no hay recepciones registradas'),
+            ('pagos', 'Aún no hay pagos registrados'),
+            ('reportes', 'Aún no hay reportes disponibles'),
+        ):
+            with self.subTest(seccion=seccion):
+                response = self.client.get(
+                    reverse('abastecimiento_forestal'),
+                    {'seccion': seccion},
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, titulo)
+                self.assertEqual(response.context['seccion'], seccion)
+
+        response = self.client.get(
+            reverse('abastecimiento_forestal'),
+            {'seccion': 'desconocida'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['seccion'], 'compras')
+        self.assertContains(response, 'Aún no hay compras registradas')
